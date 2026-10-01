@@ -10,24 +10,38 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Skift">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#e9edf1">
+<meta name="theme-color" content="#e9edf1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11161f" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --paper:#e9edf1; --card:#fff; --ink:#16202e; --muted:#5d6b7d; --line:#c9d3dd;
-  --fm:#ffd98a; --em:#ef9440; --n:#2e3a66; --hd:#5f9e97; --hn:#171e38; --off:#f2f5f8;
+  --paper:#e9edf1; --card:#fff; --ink:#16202e; --muted:#51607240; --line:#c9d3dd;
+  --muted:#4d5c6e;
+  --fm:#ffd166; --em:#e8833a; --n:#2e3a66;
+  --hd:linear-gradient(135deg,#ffd166 0%,#ffd166 42%,#e8833a 100%);
+  --hn:linear-gradient(135deg,#473d6b 0%,#141a30 100%);
+  --off:#f2f5f8; --offink:#75828f; --ring:#16202e;
+}
+@media (prefers-color-scheme: dark) {
+ :root {
+  --paper:#11161f; --card:#1a212c; --ink:#e8edf3; --muted:#8c9bab; --line:#2c3745;
+  --fm:#e5b94d; --em:#cf6f2b; --n:#4a5a96;
+  --hd:linear-gradient(135deg,#e5b94d 0%,#e5b94d 42%,#cf6f2b 100%);
+  --hn:linear-gradient(135deg,#5a4e85 0%,#232c45 100%);
+  --off:#1f2733; --offink:#6b7a8a; --ring:#e8edf3;
+ }
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);
   font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-text-size-adjust:100%}
 .wrap{max-width:660px;margin:0 auto;
   padding:calc(20px + env(safe-area-inset-top)) 14px 60px}
-header{padding:6px 2px 18px}
-h1{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;font-size:2rem;
-  line-height:1.05;margin:0 0 4px;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:.92rem;margin:0}
+header{padding:2px 2px 12px}
+h1{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;font-size:1.4rem;
+  line-height:1.1;margin:0 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.82rem;margin:0}
 .now{background:var(--card);border:1px solid var(--line);border-radius:10px;
   padding:14px 12px 12px;margin-bottom:8px}
 .now h3{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:.95rem;margin:0 0 10px;
@@ -43,24 +57,26 @@ h1{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;font-size:2r
 .legend em{font-style:normal;opacity:.75}
 .chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:22px;
   border-radius:5px;font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;font-size:.75rem}
-h2.month{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:600;font-size:1.15rem;
-  margin:26px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--ink)}
+.chip.p-off{border:1px dashed var(--line)}
+h2.month{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:600;font-size:1.05rem;
+  margin:22px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--ink)}
 h2.month span{color:var(--muted);font-weight:500}
 table.grid{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
 table.grid thead th{font-size:.68rem;color:var(--muted);font-weight:500;padding-bottom:2px}
 th.wk{width:26px;font-family:"IBM Plex Sans Condensed",sans-serif;font-size:.75rem;
   color:var(--muted);font-weight:600}
 td.d{border-radius:6px;text-align:center;padding:6px 1px 5px;border:1px solid transparent}
-td .num{display:block;font-size:.62rem;opacity:.55;line-height:1}
+td .num{display:block;font-size:.72rem;opacity:.9;line-height:1.1;font-weight:500}
 td .code{display:block;font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;
-  font-size:.88rem;line-height:1.25}
+  font-size:.8rem;line-height:1.2;opacity:.92}
 tr.free th.wk{color:var(--hd)}
-td.past{opacity:.3}
-td.today{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+td.past{filter:grayscale(1);opacity:.3}
+td.past .num{opacity:1}
+td.today{border-color:var(--ring);box-shadow:0 0 0 1.5px var(--ring)}
 td.red .num{color:#c0392b;opacity:1;font-weight:600}
 .p-FM{background:var(--fm)} .p-EM{background:var(--em)}
-.p-N{background:var(--n);color:#fff} .p-HD{background:var(--hd);color:#fff}
-.p-HN{background:var(--hn);color:#fff} .p-off{background:var(--off);color:#9aa7b5}
+.p-N{background:var(--n);color:#fff} .p-HD{background:var(--hd);color:#16202e}
+.p-HN{background:var(--hn);color:#fff} .p-off{background:var(--off);color:var(--offink)}
 ul.notes{list-style:none;padding:8px 10px;margin:8px 0 0;background:var(--card);
   border-radius:8px;border:1px solid var(--line);font-size:.82rem;color:var(--muted)}
 ul.notes li{padding:2px 0}
