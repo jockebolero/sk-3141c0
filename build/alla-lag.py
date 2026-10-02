@@ -5,7 +5,7 @@ Kör: python3 build/alla-lag.py
 import datetime as dt, json, os
 
 # ---------- data ----------
-START = dt.date(2026, 9, 28)      # måndag v40
+START = dt.date(2026, 10, 5)      # måndag v41, första hela veckan i 5-skiftet
 END   = dt.date(2027, 6, 27)
 V41   = dt.date(2026, 10, 5)
 TYPES = {
@@ -18,14 +18,6 @@ TYPES = {
 ORDER = "ABCDE"
 # veckotyp i v41 för varje lag, avläst från schemabladet
 OFFSET = {1: 2, 2: 0, 3: 4, 4: 3, 5: 1}
-# v40: gamla 3-skiftet mån–fre, 5-skiftet startar lör 3 okt
-V40 = {
- 1: ["N","N","N","N","","HN","HN"],
- 2: ["FM","FM","FM","FM","FM","",""],
- 3: ["EM","EM","EM","EM","","",""],
- 4: ["","","","","","",""],
- 5: ["","","","","","HD","HD"],
-}
 PASS = {
  "FM": ("Förmiddag", "05:55–14:00", 6, 8),
  "EM": ("Eftermiddag", "13:55–22:00", 14, 8),
@@ -43,8 +35,6 @@ RED = {
 
 def shifts(lag, mon):
     idx = (mon - V41).days // 7
-    if idx < 0:
-        return V40[lag]
     return TYPES[ORDER[(OFFSET[lag] + idx) % 5]]
 
 weeks = []
@@ -164,14 +154,14 @@ footer{margin-top:26px;font-size:.78rem;color:var(--muted);line-height:1.5;
 """
 
 SCRIPT = r"""
-const WEEKS=__WEEKS__, TYPES=__TYPES__, ORDER="ABCDE", OFFSET=__OFFSET__, V40=__V40__;
+const WEEKS=__WEEKS__, TYPES=__TYPES__, ORDER="ABCDE", OFFSET=__OFFSET__;
 const PASS=__PASS__, RED=__RED__, CAL=__CAL__;
 const DAG=["Mån","Tis","Ons","Tors","Fre","Lör","Sön"];
 const MAN=["januari","februari","mars","april","maj","juni","juli","augusti","september","oktober","november","december"];
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 function dayOf(mon,i){const [y,m,d]=mon.split("-").map(Number);return new Date(y,m-1,d+i);}
-function shifts(lag,wi){return wi===0?V40[lag]:TYPES[ORDER[(OFFSET[lag]+wi-1)%5]];}
+function shifts(lag,wi){return TYPES[ORDER[(OFFSET[lag]+wi)%5]];}
 const kort=d=>d.getDate()+" "+MAN[d.getMonth()].slice(0,3);
 
 function strip(lag,wi,rubrik){
@@ -187,7 +177,8 @@ function render(lag){
   let cur=WEEKS.findIndex(w=>w[0]<=today&&today<=iso(dayOf(w[0],6)));
   const hero=document.getElementById("hero");
   if(cur>=0){hero.innerHTML=strip(lag,cur,"Den här veckan")+(WEEKS[cur+1]?strip(lag,cur+1,"Nästa vecka"):"");}
-  else{hero.innerHTML='<div class="now"><h2>Schemat gäller 28 sep 2026 – 27 juni 2027</h2></div>';}
+  else if(today<WEEKS[0][0]){hero.innerHTML=strip(lag,0,"Första veckan")+strip(lag,1,"Veckan efter");}
+  else{hero.innerHTML='<div class="now"><h2>Schemat gäller 5 okt 2026 – 27 juni 2027</h2></div>';}
   // månader (veckan hör till torsdagens månad)
   let html="",key="",notes=[];const free=[];
   const closeMonth=()=>{if(!key)return;html+="</tbody></table>";
@@ -198,7 +189,7 @@ function render(lag){
       html+='<h2 class="month">'+MAN[thu.getMonth()]+' <span>'+thu.getFullYear()+'</span></h2>'+
         '<table class="grid"><thead><tr><th class="wk">v</th>'+DAG.map(x=>"<th>"+x+"</th>").join("")+'</tr></thead><tbody>';}
     const s=shifts(lag,wi);
-    if(wi>0&&s.every(x=>!x)&&iso(dayOf(w[0],6))>=today)
+    if(s.every(x=>!x)&&iso(dayOf(w[0],6))>=today)
       free.push('<li><b>v'+w[1]+'</b> '+kort(dayOf(w[0],0))+' – '+kort(dayOf(w[0],6))+'</li>');
     html+='<tr><th class="wk">'+w[1]+'</th>';
     for(let i=0;i<7;i++){const d=dayOf(w[0],i),ds=iso(d),p=s[i];
@@ -244,7 +235,7 @@ def page(cal_href):
     ) + '<li class="single"><span class="chip p-off">–</span>Ledig</li>'
     cal = f'<a class="cal" id="cal" href="#">Lägg in passen i din kalender</a>' if cal_href else ""
     script = (SCRIPT.replace("__WEEKS__", js(weeks)).replace("__TYPES__", js(TYPES))
-              .replace("__OFFSET__", js(OFFSET)).replace("__V40__", js(V40))
+              .replace("__OFFSET__", js(OFFSET))
               .replace("__PASS__", js({k: [v[0], v[1]] for k, v in PASS.items()}))
               .replace("__RED__", js(RED)).replace("__CAL__", js(cal_href or "")))
     seg = "".join(f'<button type="button" id="b{n}" data-lag="{n}" aria-pressed="false" '
@@ -255,7 +246,7 @@ def page(cal_href):
 <div class="wrap">
 <header>
   <h1>Skiftschema</h1>
-  <p class="sub">5-skift · september 2026 – juni 2027</p>
+  <p class="sub">5-skift · oktober 2026 – juni 2027</p>
 </header>
 <div class="pick">
   <span class="pick-label" id="picklabel">Välj skiftlag</span>
@@ -270,7 +261,7 @@ def page(cal_href):
   <ul id="free"></ul>
 </div>
 <footer>
-5-skiftet startade lördag 3 oktober 2026. Alla fem lagen går samma cykel på fem veckor,
+Schemat börjar måndag 5 oktober 2026. Alla fem lagen går samma cykel på fem veckor,
 förskjutna en vecka i taget: två nätter → två förmiddagar och en natt → ledig vecka →
 två kvällar och två nätter → fem dagpass. Passen börjar fem minuter före hel timme för överlämning.
 Storhelger körs som vanligt.
@@ -329,4 +320,9 @@ for lag in range(1, 6):
     L.append("END:VCALENDAR")
     open(os.path.join(UT, f"skiftlag{lag}.ics"), "w", encoding="utf-8", newline="").write("\r\n".join(L) + "\r\n")
     print(f"lag {lag}: {n} pass")
+# ikonerna för hemskärmen ligger i repots rot
+import shutil
+ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+for ikon in ("apple-touch-icon.png", "favicon.png"):
+    shutil.copy(os.path.join(ROT, ikon), os.path.join(UT, ikon))
 print("veckor:", len(weeks), weeks[0], weeks[-1])
