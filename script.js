@@ -1,5 +1,6 @@
 /*
  * Logiken för skiftschemat (index.html).
+ * Skapad av J. Stork.
  *
  * Skriptet ritar upp hela schemat i webbläsaren, så att man kan byta lag
  * utan att ladda om sidan.

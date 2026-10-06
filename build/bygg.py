@@ -1,5 +1,7 @@
 """Bygger skiftschemat för alla fem skiftlagen.
 
+Skapad av J. Stork.
+
 Skriver till repots rot, det som visas på webben:
     index.html                      sidans innehåll
     data.js                         schemadatan som script.js använder
@@ -139,12 +141,17 @@ Storhelger körs som vanligt.
 <br><br>
 Avläst från utdelade schemablad till och med 27 december 2026.
 Därefter uträknat på cykeln. Stäm av mot nya blad när de kommer.
+<p class="credit">Skapad av __CREDIT__</p>
 </footer>
 
 </div>
 """
 
 TITLE = "Skiftschema alla lag"
+
+# Vem som har gjort appen. Visas i sidfoten och i sidans metadata.
+# När webbplatsen är uppe kan namnet i sidfoten göras till en länk i BODY.
+CREDIT = "J. Stork"
 FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700"
          "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
 
@@ -156,6 +163,7 @@ DOCUMENT = """\
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__TITLE__</title>
+<meta name="author" content="__CREDIT__">
 
 <!-- Ikon och utseende när sidan ligger på hemskärmen -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -245,7 +253,8 @@ def body_html(with_calendar_button):
         cal_button = '\n<a class="cal" id="cal" href="#">Lägg in passen i din kalender</a>\n'
     else:
         cal_button = ""
-    return fill(BODY, buttons=buttons_html(), legend=legend_html(), calbutton=cal_button)
+    return fill(BODY, buttons=buttons_html(), legend=legend_html(), calbutton=cal_button,
+                credit=CREDIT)
 
 
 def data_js(weeks, calendar_address):
@@ -367,7 +376,8 @@ def main():
     script = read_source("script.js")
 
     # Sidan och schemadatan. {n} i adressen byts mot lagnumret av script.js.
-    write(ROT, "index.html", fill(DOCUMENT, title=TITLE, fonts=FONTS, body=body_html(True)))
+    write(ROT, "index.html", fill(DOCUMENT, title=TITLE, credit=CREDIT, fonts=FONTS,
+                                  body=body_html(True)))
     write(ROT, "data.js", data_js(weeks, "skiftlag{n}.ics"))
 
     # Förhandsvisningen: allt i en fil. Den saknar kalenderknapp, eftersom

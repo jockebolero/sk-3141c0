@@ -3,6 +3,8 @@
 Skiftschema för 5-skiftet med alla fem skiftlagen, publicerat via GitHub Pages.
 Man väljer sitt lag överst på sidan, och valet sparas i telefonen.
 
+Skapad av J. Stork.
+
 ## Struktur
 
 ```
