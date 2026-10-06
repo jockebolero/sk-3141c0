@@ -1,32 +1,28 @@
-"""Bygger appen med alla fem skiftlagen.
+"""Bygger skiftschemat för alla fem skiftlagen.
 
-Källfilerna ligger i build/alla-lag/ och skrivs för hand:
-    style.css    utseendet
-    script.js    logiken
+Skriver till repots rot, det som visas på webben:
+    index.html                      sidans innehåll
+    data.js                         schemadatan som script.js använder
+    skiftlag1.ics – skiftlag5.ics   kalenderfilerna bakom knappen på sidan
 
-Det här skriptet lägger till schemadatan och skriver den färdiga appen
-till build/ut/, som inte följer med till GitHub:
-    index.html              sidans innehåll
-    style.css, script.js    kopior av källfilerna
-    data.js                 schemadatan som script.js använder
-    skiftlag1.ics – skiftlag5.ics
-    ikonerna för hemskärmen
-    forhandsvisning.html    allt i en enda fil, utan kalenderknapp
+Utseendet ligger i style.css och logiken i script.js. De filerna skrivs
+för hand och ändras inte av det här skriptet.
+
+Skriptet skriver också build/ut/forhandsvisning.html: hela appen i en enda
+fil, utan kalenderknapp. Den följer inte med till GitHub.
 
 Kör:
-    python3 build/alla-lag.py
+    python3 build/bygg.py
 
-Appen läggs inte ut automatiskt. Schemat ändras i avsnittet "Schemadata" här nedanför.
+Schemat ändras i avsnittet "Schemadata" här nedanför.
 """
 import datetime as dt
 import json
 import os
-import shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROT = os.path.dirname(HERE)              # repots rot
-SRC = os.path.join(HERE, "alla-lag")     # style.css och script.js
-UT = os.path.join(HERE, "ut")            # hit skrivs den färdiga appen
+ROT = os.path.dirname(HERE)       # repots rot, det som visas på webben
+UT = os.path.join(HERE, "ut")     # förhandsvisningen, följer inte med till GitHub
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +148,7 @@ TITLE = "Skiftschema alla lag"
 FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700"
          "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
 
-# Den färdiga appen: ett helt HTML-dokument som hämtar stil, data och logik från egna filer.
+# Sidan: ett helt HTML-dokument som hämtar stil, data och logik från egna filer.
 DOCUMENT = """\
 <!DOCTYPE html>
 <html lang="sv" class="fristaende">
@@ -244,7 +240,7 @@ def buttons_html():
 
 
 def body_html(with_calendar_button):
-    """Sidans innehåll. Kalenderknappen finns bara i den färdiga appen."""
+    """Sidans innehåll. Kalenderknappen finns bara på den utlagda sidan."""
     if with_calendar_button:
         cal_button = '\n<a class="cal" id="cal" href="#">Lägg in passen i din kalender</a>\n'
     else:
@@ -256,7 +252,7 @@ def data_js(weeks, calendar_address):
     """Innehållet i data.js: schemadatan som script.js använder."""
     passes = {code: [name, times] for code, (name, times, _, _) in PASS.items()}
     return "\n".join([
-        "// Skapad av build/alla-lag.py. Ändra inte här, ändra i byggskriptet.",
+        "// Skapad av build/bygg.py. Ändra inte här, ändra i byggskriptet.",
         "",
         "// Varje vecka i perioden: [måndagens datum, veckonummer].",
         f"const WEEKS = {rows_to_js(weeks)};",
@@ -355,12 +351,12 @@ def build_calendar(lag, weeks):
 # ---------------------------------------------------------------------------
 
 def read_source(name):
-    with open(os.path.join(SRC, name), encoding="utf-8") as f:
+    with open(os.path.join(ROT, name), encoding="utf-8") as f:
         return f.read()
 
 
-def write(name, text, newline=None):
-    with open(os.path.join(UT, name), "w", encoding="utf-8", newline=newline) as f:
+def write(folder, name, text, newline=None):
+    with open(os.path.join(folder, name), "w", encoding="utf-8", newline=newline) as f:
         f.write(text)
 
 
@@ -370,16 +366,13 @@ def main():
     style = read_source("style.css")
     script = read_source("script.js")
 
-    # Den färdiga appen: innehåll, stil, data och logik i var sin fil.
-    # {n} i adressen byts mot lagnumret av script.js.
-    write("index.html", fill(DOCUMENT, title=TITLE, fonts=FONTS, body=body_html(True)))
-    write("style.css", style)
-    write("script.js", script)
-    write("data.js", data_js(weeks, "skiftlag{n}.ics"))
+    # Sidan och schemadatan. {n} i adressen byts mot lagnumret av script.js.
+    write(ROT, "index.html", fill(DOCUMENT, title=TITLE, fonts=FONTS, body=body_html(True)))
+    write(ROT, "data.js", data_js(weeks, "skiftlag{n}.ics"))
 
     # Förhandsvisningen: allt i en fil. Den saknar kalenderknapp, eftersom
-    # kalenderfilerna bara finns bredvid den färdiga appen.
-    write("forhandsvisning.html", fill(
+    # kalenderfilerna bara finns på den utlagda sidan.
+    write(UT, "forhandsvisning.html", fill(
         PREVIEW,
         title=TITLE,
         fonts=FONTS,
@@ -392,12 +385,8 @@ def main():
     for lag in range(1, 6):
         text, count = build_calendar(lag, weeks)
         # newline="" hindrar Python från att ändra radsluten i kalenderfilen.
-        write(f"skiftlag{lag}.ics", text, newline="")
+        write(ROT, f"skiftlag{lag}.ics", text, newline="")
         print(f"lag {lag}: {count} pass")
-
-    # Ikonerna för hemskärmen ligger i repots rot.
-    for icon in ("apple-touch-icon.png", "favicon.png"):
-        shutil.copy(os.path.join(ROT, icon), os.path.join(UT, icon))
 
     print(f"veckor: {len(weeks)}, från {weeks[0][0]} till och med vecka {weeks[-1][1]}")
 

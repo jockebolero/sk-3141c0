@@ -1,48 +1,54 @@
 # Skiftschema
 
-Skiftschema för 5-skiftet, publicerat via GitHub Pages.
+Skiftschema för 5-skiftet med alla fem skiftlagen, publicerat via GitHub Pages.
+Man väljer sitt lag överst på sidan, och valet sparas i telefonen.
 
 ## Struktur
 
 ```
-index.html              Sidan för skiftlag 2: innehållet, med en tabell per månad
-style.css               Utseendet
-script.js               Logiken: markerar dagens datum och visar aktuell vecka
-skiftlag2.ics           Kalenderfilen bakom knappen på sidan
-apple-touch-icon.png    Ikon på hemskärmen
-favicon.png             Ikon i webbläsarens flik
+index.html                      Sidans innehåll
+style.css                       Utseendet
+script.js                       Logiken: ritar upp schemat och byter lag
+data.js                         Schemadatan som script.js använder
+skiftlag1.ics – skiftlag5.ics   Kalenderfilerna bakom knappen på sidan
+apple-touch-icon.png            Ikon på hemskärmen
+favicon.png                     Ikon i webbläsarens flik
 
 build/
-  skiftlag2.py          Bygger index.html och skiftlag2.ics
-  alla-lag.py           Bygger appen med alla fem lagen till build/ut/
-  alla-lag/
-    style.css           Utseendet för appen med alla lagen
-    script.js           Logiken för appen med alla lagen
+  bygg.py                       Bygger index.html, data.js och kalenderfilerna
 ```
 
-Filerna i roten är det som visas på webben.
+`style.css` och `script.js` skrivs för hand.
 
-`style.css` och `script.js` skrivs för hand. `index.html` och `skiftlag2.ics` skapas av
-`build/skiftlag2.py` och ska inte ändras direkt, eftersom ändringen skrivs över vid nästa bygge.
-
-Appen med alla fem lagen är inte utlagd. Den byggs till `build/ut/`, som inte följer med till GitHub.
+`index.html`, `data.js` och kalenderfilerna skapas av `build/bygg.py` och ska inte ändras
+direkt, eftersom ändringen skrivs över vid nästa bygge.
 
 ## Uppdatera schemat
 
-Rotationen, tiderna och de röda dagarna står överst i respektive byggskript, under rubriken
+Rotationen, tiderna och de röda dagarna står överst i `build/bygg.py`, under rubriken
 "Schemadata". Ändra där och bygg om:
 
-    python3 build/skiftlag2.py
-    python3 build/alla-lag.py
+    python3 build/bygg.py
 
-Skripten behöver bara Python 3, inga extra paket.
+Skriptet behöver bara Python 3, inga extra paket.
 
 ## Ändra utseende eller beteende
 
-Ändra direkt i `style.css` eller `script.js`. Det behövs inget bygge för sidan för skiftlag 2.
-För appen med alla lagen kör du `python3 build/alla-lag.py` efteråt, så kopieras filerna till `build/ut/`.
+Ändra direkt i `style.css` eller `script.js`. Det behövs inget bygge.
+
+Vilket lag som visas för den som inte har valt något än står överst i `script.js`,
+i konstanten `STANDARDLAG`.
+
+## Länka till ett visst lag
+
+Lägg till `#lag` och lagets nummer sist i adressen, till exempel `#lag4`.
 
 ## Varifrån datan kommer
 
 Avläst från utdelade schemablad till och med 27 december 2026. Därefter uträknat på
 femveckorscykeln. Stäm av mot nya blad när de kommer.
+
+## Historik
+
+Fram till oktober 2026 visade sidan bara skiftlag 2, med start i september.
+Den versionen finns kvar i repots historik.
