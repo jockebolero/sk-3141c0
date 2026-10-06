@@ -1,6 +1,6 @@
 /*
  * Utseendet för skiftschemat (index.html).
- * Skapad av J. Stork.
+ * Gjord av J. Stork.
  *
  * Layout: lagväljare överst, sedan veckoremsor och därefter månad för månad
  * i en smal kolumn som passar en telefon.
@@ -421,11 +421,15 @@ footer {
   padding-top: 12px;
 }
 
-/* Vem som har gjort appen */
-.credit {
+/* Avsändare längst ned */
+.maker {
   margin: 14px 0 0;
-  font-weight: 600;
+  font-size: .78rem;
+  color: var(--muted);
+}
+.maker b {
   color: var(--ink);
+  font-weight: 600;
 }
 
 /* När sidan ligger på hemskärmen: håll innehållet undan från telefonens

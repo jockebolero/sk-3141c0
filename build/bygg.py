@@ -1,6 +1,6 @@
 """Bygger skiftschemat för alla fem skiftlagen.
 
-Skapad av J. Stork.
+Gjord av J. Stork.
 
 Skriver till repots rot, det som visas på webben:
     index.html                      sidans innehåll
@@ -141,7 +141,7 @@ Storhelger körs som vanligt.
 <br><br>
 Avläst från utdelade schemablad till och med 27 december 2026.
 Därefter uträknat på cykeln. Stäm av mot nya blad när de kommer.
-<p class="credit">Skapad av __CREDIT__</p>
+<p class="maker">Gjord av <b>__CREDIT__</b> · __TAGLINE__</p>
 </footer>
 
 </div>
@@ -152,6 +152,7 @@ TITLE = "Skiftschema alla lag"
 # Vem som har gjort appen. Visas i sidfoten och i sidans metadata.
 # När webbplatsen är uppe kan namnet i sidfoten göras till en länk i BODY.
 CREDIT = "J. Stork"
+TAGLINE = "Digitalt hantverk"
 FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700"
          "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
 
@@ -194,6 +195,7 @@ __BODY__</body>
 # dokumentets ram runt innehållet, så här finns ingen <html> eller <body>.
 PREVIEW = """\
 <title>__TITLE__</title>
+<meta name="author" content="__CREDIT__">
 <link rel="stylesheet" href="__FONTS__">
 <style>
 __STYLE__</style>
@@ -254,7 +256,7 @@ def body_html(with_calendar_button):
     else:
         cal_button = ""
     return fill(BODY, buttons=buttons_html(), legend=legend_html(), calbutton=cal_button,
-                credit=CREDIT)
+                credit=CREDIT, tagline=TAGLINE)
 
 
 def data_js(weeks, calendar_address):
@@ -385,6 +387,7 @@ def main():
     write(UT, "forhandsvisning.html", fill(
         PREVIEW,
         title=TITLE,
+        credit=CREDIT,
         fonts=FONTS,
         style=style,
         body=body_html(False),
