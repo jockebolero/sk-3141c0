@@ -8,19 +8,24 @@
  * Schemadatan ligger i data.js, som skapas av build/bygg.py och måste
  * laddas före den här filen. Därifrån kommer:
  *
- *   WEEKS   varje vecka i perioden: [måndagens datum, veckonummer]
- *   TYPES   de fem veckotyperna i cykeln, pass måndag till söndag ("" = ledig)
- *   ORDER   ordningen på veckotyperna
- *   OFFSET  var i cykeln varje lag står första veckan (0 = A, 1 = B, ...)
- *   PASS    passkod -> [namn, tider]
- *   RED     datum -> helgdagens namn
- *   CAL     adress till kalenderfilen, där {n} byts mot lagnumret
+ *   WEEKS      varje vecka i perioden: [måndagens datum, veckonummer]
+ *   TYPES      veckotyperna i cykeln, pass måndag till söndag ("" = ledig)
+ *   ORDER      ordningen på veckotyperna
+ *   OFFSET     var i cykeln varje lag står första veckan (0 = A, 1 = B, ...)
+ *   PASS       passkod -> [namn, tider, hel timme då passet börjar, längd i timmar]
+ *   RED        datum -> helgdagens namn
+ *   CONFIRMED  sista bekräftade dagen, veckor efter den är preliminära ("" = allt bekräftat)
+ *   CAL        adress till kalenderfilen, där {n} byts mot lagnumret ("" = ingen kalender)
  */
 
 // Laget som visas för den som inte har valt något än.
-const STANDARDLAG = 2;
+// null betyder att sidan ber besökaren välja, så att ingen läser fel lags schema.
+const STANDARDLAG = null;
+
+const LAG = Object.keys(OFFSET).map(Number).sort((a, b) => a - b);
 
 const DAG = ["Mån", "Tis", "Ons", "Tors", "Fre", "Lör", "Sön"];
+const DAG_LANG = ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag"];
 const MAN = ["januari", "februari", "mars", "april", "maj", "juni", "juli",
              "augusti", "september", "oktober", "november", "december"];
 
@@ -30,6 +35,14 @@ const MAN = ["januari", "februari", "mars", "april", "maj", "juni", "juli",
 
 function pad(n) {
   return String(n).padStart(2, "0");
+}
+
+// Tidpunkten just nu. Med ?nu=2026-12-30T02:00 i adressen kan man prova
+// hur sidan ser ut vid en annan tidpunkt.
+function nu() {
+  const test = new URLSearchParams(location.search).get("nu");
+  const moment = test ? new Date(test) : new Date();
+  return isNaN(moment) ? new Date() : moment;
 }
 
 // Datum som "ÅÅÅÅ-MM-DD" i telefonens lokala tid.
@@ -43,9 +56,14 @@ function dayOf(monday, i) {
   return new Date(year, month - 1, day + i);
 }
 
+// Veckodagens nummer med måndag som 0.
+function weekday(d) {
+  return (d.getDay() + 6) % 7;
+}
+
 // Passen måndag till söndag för ett lag, vecka nummer weekIndex i WEEKS.
 function shifts(lag, weekIndex) {
-  return TYPES[ORDER[(OFFSET[lag] + weekIndex) % 5]];
+  return TYPES[ORDER[(OFFSET[lag] + weekIndex) % ORDER.length]];
 }
 
 // Datum i kort form, till exempel "24 dec".
@@ -53,38 +71,134 @@ function shortDate(d) {
   return d.getDate() + " " + MAN[d.getMonth()].slice(0, 3);
 }
 
+// Datum i lång form, till exempel "fredag 9 oktober".
+function longDate(d) {
+  return DAG_LANG[weekday(d)] + " " + d.getDate() + " " + MAN[d.getMonth()];
+}
+
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// Klockslag, till exempel "06:00".
+function clock(d) {
+  return pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+// Antal kalenderdagar från a till b.
+function daysBetween(a, b) {
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((end - start) / 86400000);
+}
+
+// En vecka är preliminär om den börjar efter den sista bekräftade dagen.
+function isPreliminary(weekIndex) {
+  return CONFIRMED !== "" && WEEKS[weekIndex][0] > CONFIRMED;
+}
+
+// Vad som gäller en dag, i ord: "natt 21:55–06:00" eller "ledig".
+function describe(pass) {
+  return pass ? PASS[pass][0].toLowerCase() + " " + PASS[pass][1] : "ledig";
+}
+
 // ---------------------------------------------------------------------------
-// Veckoremsorna överst
+// Alla pass för ett lag, med start- och sluttid
 // ---------------------------------------------------------------------------
 
-// En veckoremsa: sju rutor med veckodag och pass.
-function strip(lag, weekIndex, rubrik) {
+// Varje pass som { code, day, start, end }. Passet börjar fem minuter före
+// hel timme och kan sluta dagen efter (nattpassen).
+function allShifts(lag) {
+  const list = [];
+  WEEKS.forEach((week, weekIndex) => {
+    shifts(lag, weekIndex).forEach((code, i) => {
+      if (!code) return;
+      const hour = PASS[code][2];
+      const length = PASS[code][3];
+      const day = dayOf(week[0], i);
+      list.push({
+        code: code,
+        day: day,
+        start: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, -5),
+        end: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour + length, 0)
+      });
+    });
+  });
+  return list;
+}
+
+// Passet som pågår just nu, eller annars nästa pass. null när schemat är slut.
+function currentShift(lag, now) {
+  return allShifts(lag).find(shift => shift.end > now) || null;
+}
+
+// ---------------------------------------------------------------------------
+// Överst: nästa pass
+// ---------------------------------------------------------------------------
+
+function nextHtml(lag, now) {
+  const shift = currentShift(lag, now);
+  if (!shift) {
+    return '<p class="label">Schemat är slut</p>' +
+           '<p class="fine">Det finns inga fler pass i den här perioden.</p>';
+  }
+
+  const name = PASS[shift.code][0];
+  const times = PASS[shift.code][1];
+  const chip = '<span class="chip big p-' + shift.code + '" aria-hidden="true">' + shift.code + '</span>';
+
+  if (shift.start <= now) {
+    return chip + '<div><p class="label">Du jobbar nu</p>' +
+           '<p class="main">' + name + '</p>' +
+           '<p class="detail">Slutar ' + clock(shift.end) + '</p></div>';
+  }
+
+  const days = daysBetween(now, shift.start);
+  const when = days === 0 ? "i dag" : days === 1 ? "i morgon" : "om " + days + " dagar";
+  const startsToday = allShifts(lag).some(other => iso(other.day) === iso(now));
+  const label = days === 0 || startsToday ? "Nästa pass" : "Ledig i dag · nästa pass";
+
+  return chip + '<div><p class="label">' + label + '</p>' +
+         '<p class="main">' + capitalize(longDate(shift.start)) + '</p>' +
+         '<p class="detail">' + name + ' ' + times + ' · ' + when + '</p></div>';
+}
+
+// ---------------------------------------------------------------------------
+// Veckoremsorna: den här veckan och nästa
+// ---------------------------------------------------------------------------
+
+// En veckoremsa: sju rutor med veckodag, datum och pass.
+function strip(lag, weekIndex, heading, today) {
   const week = shifts(lag, weekIndex);
   let cells = "";
   for (let i = 0; i < 7; i++) {
     const pass = week[i];
-    cells += '<div class="hd"><span>' + DAG[i] + '</span>' +
-             '<em class="p-' + (pass || "off") + '">' + (pass || "–") + '</em></div>';
+    const day = dayOf(WEEKS[weekIndex][0], i);
+    const isToday = iso(day) === today;
+    cells += '<li' + (isToday ? ' class="today" aria-current="date"' : '') +
+             ' aria-label="' + capitalize(longDate(day)) + ': ' + describe(pass) + '">' +
+             '<span class="wd">' + DAG[i] + '</span>' +
+             '<span class="dt">' + day.getDate() + '</span>' +
+             '<span class="chip p-' + (pass || "off") + '">' + (pass || "–") + '</span></li>';
   }
-  return '<div class="now"><h2>' + rubrik + ' (v' + WEEKS[weekIndex][1] + ')</h2>' +
-         '<div class="hrow">' + cells + '</div></div>';
+  return '<h2>' + heading + ' <span>v. ' + WEEKS[weekIndex][1] + '</span></h2>' +
+         '<ul class="strip">' + cells + '</ul>';
 }
 
-function heroHtml(lag, today) {
+function weeksHtml(lag, today) {
   const current = WEEKS.findIndex(week =>
     week[0] <= today && today <= iso(dayOf(week[0], 6)));
 
   if (current >= 0) {
     const hasNext = Boolean(WEEKS[current + 1]);
-    return strip(lag, current, "Den här veckan") +
-           (hasNext ? strip(lag, current + 1, "Nästa vecka") : "");
+    return strip(lag, current, "Den här veckan", today) +
+           (hasNext ? strip(lag, current + 1, "Nästa vecka", today) : "");
   }
   if (today < WEEKS[0][0]) {
     // Schemat har inte börjat än.
-    return strip(lag, 0, "Första veckan") + strip(lag, 1, "Veckan efter");
+    return strip(lag, 0, "Första veckan", today) + strip(lag, 1, "Veckan efter", today);
   }
-  // Schemat har tagit slut.
-  return '<div class="now"><h2>Schemat gäller 5 okt 2026 – 27 juni 2027</h2></div>';
+  return "";
 }
 
 // ---------------------------------------------------------------------------
@@ -95,119 +209,213 @@ function heroHtml(lag, today) {
 function cellHtml(day, pass, today) {
   const date = iso(day);
   const classes = ["d", "p-" + (pass || "off")];
-  if (RED[date]) classes.push("red");
+  let label = capitalize(longDate(day)) + ": " + describe(pass);
+  if (RED[date]) {
+    classes.push("red");
+    label += ", " + RED[date];
+  }
   if (date < today) classes.push("past");
   if (date === today) classes.push("today");
-  return '<td class="' + classes.join(" ") + '" data-d="' + date + '">' +
+  return '<td class="' + classes.join(" ") + '" aria-label="' + label + '"' +
+         (date === today ? ' aria-current="date"' : '') + '>' +
          '<span class="num">' + day.getDate() + '</span>' +
          '<span class="code">' + (pass || "–") + '</span></td>';
 }
 
-// Raden under en månad som säger vad som gäller en röd dag.
-function redDayHtml(day, pass) {
-  const what = pass ? PASS[pass][0].toLowerCase() + " " + PASS[pass][1] : "ledig";
-  return '<li><b>' + shortDate(day) + '</b> ' + RED[iso(day)] + ' – ' + what + '</li>';
-}
-
-// Bygger alla månadstabeller och samlar hela lediga veckor som inte har passerat.
-function monthsHtml(lag, today) {
-  let html = "";
-  let month = "";     // månaden som byggs just nu, som "år-månad"
-  let notes = [];     // röda dagar i den månaden
-  const free = [];
-
-  function closeMonth() {
-    if (!month) return;
-    html += "</tbody></table>";
-    if (notes.length) html += '<ul class="notes">' + notes.join("") + "</ul>";
-    notes = [];
-  }
+// En månad som rubrik, tabell och lista över röda dagar.
+// Veckor som går över ett månadsskifte finns med i båda månaderna,
+// med tomma rutor för dagarna som hör till den andra månaden.
+function monthHtml(lag, year, month, today, state) {
+  let rows = "";
+  let notes = "";
+  let allPreliminary = true;
 
   WEEKS.forEach((entry, weekIndex) => {
-    const [monday, weekNumber] = entry;
+    const monday = entry[0];
+    const days = [0, 1, 2, 3, 4, 5, 6].map(i => dayOf(monday, i));
+    if (!days.some(day => day.getFullYear() === year && day.getMonth() === month)) return;
+
+    const preliminary = isPreliminary(weekIndex);
+    if (!preliminary) allPreliminary = false;
+
+    // Gränsen mellan bekräftat och uträknat visas en gång, före första preliminära veckan.
+    if (preliminary && !state.boundaryShown) {
+      state.boundaryShown = true;
+      rows += '<tr class="boundary"><td colspan="8">Härifrån är schemat uträknat, inte bekräftat</td></tr>';
+    }
+
     const week = shifts(lag, weekIndex);
-
-    // En vecka hör till den månad där torsdagen ligger.
-    const thursday = dayOf(monday, 3);
-    const key = thursday.getFullYear() + "-" + thursday.getMonth();
-    if (key !== month) {
-      closeMonth();
-      month = key;
-      html += '<h2 class="month">' + MAN[thursday.getMonth()] +
-              ' <span>' + thursday.getFullYear() + '</span></h2>' +
-              '<table class="grid"><thead><tr><th class="wk">v</th>' +
-              DAG.map(name => "<th>" + name + "</th>").join("") +
-              '</tr></thead><tbody>';
-    }
-
-    const isFree = week.every(pass => !pass);
-    if (isFree && iso(dayOf(monday, 6)) >= today) {
-      free.push('<li><b>v' + weekNumber + '</b> ' + shortDate(dayOf(monday, 0)) +
-                ' – ' + shortDate(dayOf(monday, 6)) + '</li>');
-    }
-
-    html += '<tr><th class="wk">' + weekNumber + '</th>';
-    for (let i = 0; i < 7; i++) {
-      const day = dayOf(monday, i);
-      if (RED[iso(day)]) notes.push(redDayHtml(day, week[i]));
-      html += cellHtml(day, week[i], today);
-    }
-    html += "</tr>";
+    rows += '<tr><th class="wk" scope="row" aria-label="Vecka ' + entry[1] + '">' + entry[1] + '</th>';
+    days.forEach((day, i) => {
+      if (day.getFullYear() !== year || day.getMonth() !== month) {
+        rows += '<td class="empty"></td>';
+        return;
+      }
+      if (RED[iso(day)]) {
+        notes += '<li><b>' + shortDate(day) + '</b> ' + RED[iso(day)] + ' – ' + describe(week[i]) + '</li>';
+      }
+      rows += cellHtml(day, week[i], today);
+    });
+    rows += "</tr>";
   });
-  closeMonth();
 
-  return { html: html, free: free };
+  const name = MAN[month] + " " + year;
+  return '<section class="month">' +
+         '<h2>' + MAN[month] + ' <span>' + year + '</span>' +
+         (allPreliminary ? ' <em class="tag">Preliminärt</em>' : '') + '</h2>' +
+         '<table class="grid"><caption>' + capitalize(name) + ', skiftlag ' + lag + '</caption>' +
+         '<thead><tr><th class="wk" scope="col" aria-label="Vecka">v</th>' +
+         DAG.map((short, i) => '<th scope="col" aria-label="' + DAG_LANG[i] + '">' + short + '</th>').join("") +
+         '</tr></thead><tbody>' + rows + '</tbody></table>' +
+         (notes ? '<ul class="notes">' + notes + '</ul>' : '') +
+         '</section>';
+}
+
+// Alla månader i perioden. Månader som har passerat hamnar bakom "Visa tidigare månader".
+function monthsHtml(lag, today) {
+  const first = dayOf(WEEKS[0][0], 0);
+  const last = dayOf(WEEKS[WEEKS.length - 1][0], 6);
+  const state = { boundaryShown: false };
+  let earlier = "";
+  let upcoming = "";
+
+  let year = first.getFullYear();
+  let month = first.getMonth();
+  while (year < last.getFullYear() || (year === last.getFullYear() && month <= last.getMonth())) {
+    const html = monthHtml(lag, year, month, today, state);
+    const lastDayOfMonth = iso(new Date(year, month + 1, 0));
+    if (lastDayOfMonth < today) earlier += html; else upcoming += html;
+    month++;
+    if (month > 11) { month = 0; year++; }
+  }
+
+  return (earlier ? '<details class="earlier"><summary>Visa tidigare månader</summary>' + earlier + '</details>' : '') +
+         upcoming;
+}
+
+// Hela lediga veckor som inte har passerat. Preliminära veckor får en asterisk,
+// och då visas också förklaringen under listan.
+function freeWeeksHtml(lag, today) {
+  let html = "";
+  let anyPreliminary = false;
+  WEEKS.forEach((entry, weekIndex) => {
+    const isFree = shifts(lag, weekIndex).every(pass => !pass);
+    if (!isFree || iso(dayOf(entry[0], 6)) < today) return;
+    const preliminary = isPreliminary(weekIndex);
+    if (preliminary) anyPreliminary = true;
+    html += '<li><b>v' + entry[1] + '</b> ' + shortDate(dayOf(entry[0], 0)) + ' – ' +
+            shortDate(dayOf(entry[0], 6)) + (preliminary ? ' *' : '') + '</li>';
+  });
+  document.getElementById("freenote").hidden = !anyPreliminary;
+  return html || "<li>Inga hela lediga veckor kvar i perioden</li>";
 }
 
 // ---------------------------------------------------------------------------
-// Rita upp sidan och byta lag
+// Rita upp sidan
 // ---------------------------------------------------------------------------
 
-function render(lag) {
-  const today = iso(new Date());
-  const months = monthsHtml(lag, today);
+let valtLag = null;      // laget som visas, null innan man har valt
+let ritatFor = "";       // vad som senast ritades, se signature()
 
-  document.getElementById("hero").innerHTML = heroHtml(lag, today);
-  document.getElementById("months").innerHTML = months.html;
-  document.getElementById("free").innerHTML =
-    months.free.join("") || "<li>Inga hela lediga veckor kvar i perioden</li>";
-  document.getElementById("freeh").textContent = "Hela veckor lediga för skiftlag " + lag;
+// Beskriver det som påverkar hur sidan ser ut: lag, datum och aktuellt pass.
+// När den ändras behöver sidan ritas om.
+function signature(lag, now) {
+  if (!lag) return "inget";
+  const shift = currentShift(lag, now);
+  const state = shift ? shift.start.getTime() + (shift.start <= now ? "p" : "v") : "slut";
+  return lag + "|" + iso(now) + "|" + state;
+}
 
-  // Markera valt lag i väljaren.
+function render() {
+  const lag = valtLag;
+  const now = nu();
+  const today = iso(now);
+  ritatFor = signature(lag, now);
+
   document.querySelectorAll(".seg button").forEach(button => {
-    const selected = Number(button.dataset.lag) === lag;
-    button.setAttribute("aria-pressed", String(selected));
+    button.setAttribute("aria-pressed", String(Number(button.dataset.lag) === lag));
   });
+  document.getElementById("schema").hidden = !lag;
+  document.getElementById("valj").hidden = Boolean(lag);
 
-  // Kalenderknappen finns bara på den utlagda sidan.
-  const cal = document.getElementById("cal");
-  if (cal) {
-    cal.href = CAL.replace("{n}", lag);
-    cal.textContent = "Lägg in skiftlag " + lag + " i din kalender";
+  if (!lag) {
+    document.getElementById("rubrik").textContent = "Välj ditt skiftlag";
+    document.title = "Skiftschema";
+    return;
   }
 
+  document.getElementById("rubrik").textContent = "Skiftlag " + lag;
   document.title = "Skiftlag " + lag + " – skiftschema";
+
+  document.getElementById("next").innerHTML = nextHtml(lag, now);
+  const weeks = weeksHtml(lag, today);
+  document.getElementById("weeks").innerHTML = weeks;
+  document.getElementById("weeks").hidden = !weeks;
+  document.getElementById("months").innerHTML = monthsHtml(lag, today);
+  document.getElementById("free").innerHTML = freeWeeksHtml(lag, today);
+  document.getElementById("freeh").textContent = "Hela veckor lediga för skiftlag " + lag;
+
+  // Kalenderdelen finns bara på den utlagda sidan.
+  const subscribe = document.getElementById("cal-sub");
+  const file = document.getElementById("cal-file");
+  if (subscribe && file && CAL) {
+    const address = new URL(CAL.replace("{n}", lag), location.href);
+    file.href = address.href;
+    // webcal:// får kalenderappen att prenumerera i stället för att bara läsa in filen en gång.
+    subscribe.href = "webcal://" + address.host + address.pathname;
+    subscribe.textContent = "Prenumerera på skiftlag " + lag;
+  }
+}
+
+// Ritar om sidan om datumet eller passet har ändrats sedan sist. En app på
+// hemskärmen kan ligga öppen över natten, och då ska "i dag" följa med.
+function refresh() {
+  if (signature(valtLag, nu()) !== ritatFor) render();
+}
+
+// ---------------------------------------------------------------------------
+// Välja lag
+// ---------------------------------------------------------------------------
+
+function isLag(n) {
+  return LAG.includes(n);
 }
 
 // Byter lag och kommer ihåg valet till nästa gång.
 function pick(lag) {
-  render(lag);
+  valtLag = lag;
+  render();
   // Lagring kan vara avstängd, till exempel i privat läge. Då struntar vi i det.
   try { localStorage.setItem("skiftlag", String(lag)); } catch (e) {}
-  try { history.replaceState(null, "", "#lag" + lag); } catch (e) {}
 }
 
-// Vilket lag som visas först: adressen (#lag3), sedan senaste valet, annars STANDARDLAG.
+// Vilket lag som visas först: det man själv valde senast, annars adressen
+// (#lag3), annars STANDARDLAG. Det egna valet går före adressen, så att en
+// app på hemskärmen inte fastnar på laget som stod i länken man fick.
 function startLag() {
-  const fromHash = /^#lag([1-5])$/.exec(location.hash || "");
-  if (fromHash) return Number(fromHash[1]);
-
   let saved = 0;
   try { saved = Number(localStorage.getItem("skiftlag")) || 0; } catch (e) {}
-  return saved >= 1 && saved <= 5 ? saved : STANDARDLAG;
+  if (isLag(saved)) return saved;
+
+  const fromHash = /^#lag(\d+)$/.exec(location.hash || "");
+  if (fromHash && isLag(Number(fromHash[1]))) return Number(fromHash[1]);
+
+  return STANDARDLAG;
 }
 
 document.querySelectorAll(".seg button").forEach(button => {
   button.addEventListener("click", () => pick(Number(button.dataset.lag)));
 });
-render(startLag());
+
+valtLag = startLag();
+render();
+
+// Håll sidan aktuell: när appen tas fram igen och en gång i minuten.
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+window.addEventListener("pageshow", refresh);
+setInterval(refresh, 60000);
+
+// Offline-stöd. Finns bara på den utlagda sidan, där sw.js ligger bredvid.
+if (CAL && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}

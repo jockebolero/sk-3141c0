@@ -1,17 +1,18 @@
-"""Bygger skiftschemat för alla fem skiftlagen.
+"""Bygger skiftschemat för alla skiftlagen.
 
 Gjord av J. Stork.
 
 Skriver till repots rot, det som visas på webben:
     index.html                      sidans innehåll
     data.js                         schemadatan som script.js använder
-    skiftlag1.ics – skiftlag5.ics   kalenderfilerna bakom knappen på sidan
+    skiftlag1.ics – skiftlag5.ics   kalenderfilerna bakom knapparna på sidan
 
 Utseendet ligger i style.css och logiken i script.js. De filerna skrivs
-för hand och ändras inte av det här skriptet.
+för hand och ändras inte av det här skriptet. Det gör inte heller sw.js
+(offline-stödet), manifest.webmanifest, typsnitten eller ikonerna.
 
 Skriptet skriver också build/ut/forhandsvisning.html: hela appen i en enda
-fil, utan kalenderknapp. Den följer inte med till GitHub.
+fil, utan kalenderknappar. Den följer inte med till GitHub.
 
 Kör:
     python3 build/bygg.py
@@ -34,7 +35,12 @@ UT = os.path.join(HERE, "ut")     # förhandsvisningen, följer inte med till Gi
 START = dt.date(2026, 10, 5)   # måndag vecka 41, första hela veckan i 5-skiftet
 END = dt.date(2027, 6, 27)     # söndag vecka 25, midsommarveckan
 
-# Fem veckotyper som upprepas i ordningen A, B, C, D, E.
+# Sista dagen som är avläst från utdelade schemablad. Veckor efter den är
+# uträknade på cykeln och märks som preliminära på sidan.
+# Sätt till None om hela perioden är bekräftad.
+CONFIRMED = dt.date(2026, 12, 27)
+
+# Veckotyperna som upprepas i ordningen A, B, C, D, E.
 # Pass måndag till söndag, tom sträng = ledig.
 TYPES = {
     "A": ["N", "N", "", "", "FM", "HD", "HD"],
@@ -51,12 +57,13 @@ OFFSET = {1: 2, 2: 0, 3: 4, 4: 3, 5: 1}
 
 # Passkod -> (namn, tider som visas, hel timme då passet börjar, längd i timmar).
 # Man går på fem minuter före hel timme för överlämning.
+# Namnen får inte innehålla kommatecken, eftersom de också står i kalenderfilerna.
 PASS = {
     "FM": ("Förmiddag", "05:55–14:00", 6, 8),
     "EM": ("Eftermiddag", "13:55–22:00", 14, 8),
     "N": ("Natt", "21:55–06:00", 22, 8),
-    "HD": ("Helgdag", "05:55–18:00", 6, 12),
-    "HN": ("Helgnatt", "17:55–06:00", 18, 12),
+    "HD": ("Helgpass dag", "05:55–18:00", 6, 12),
+    "HN": ("Helgpass natt", "17:55–06:00", 18, 12),
 }
 
 # Röda dagar och aftnar som markeras på sidan.
@@ -79,13 +86,40 @@ RED = {
 
 
 # ---------------------------------------------------------------------------
+# Texter och inställningar
+# ---------------------------------------------------------------------------
+
+TITLE = "Skiftschema"
+DESCRIPTION = "Skiftschema för alla skiftlag."
+
+# Om sidan ska döljas för sökmotorer. Den är till för kollegorna, inte för Google.
+NOINDEX = True
+
+# Vem som har gjort appen. Visas i sidfoten och i sidans metadata.
+# Namnet i sidfoten länkar till webbplatsen.
+CREDIT = "J. Stork"
+CREDIT_URL = "https://jstork.se"
+TAGLINE = "Digitalt hantverk"
+COPYRIGHT_YEAR = "2026"   # året då appen först publicerades
+
+# Förhandsvisningen kan inte läsa typsnittsfilerna i mappen typsnitt/,
+# så den hämtar samma typsnitt från Google i stället.
+PREVIEW_FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700"
+                 "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
+
+DAGAR = ["Mån", "Tis", "Ons", "Tors", "Fre", "Lör", "Sön"]
+MANADER = ["januari", "februari", "mars", "april", "maj", "juni", "juli",
+           "augusti", "september", "oktober", "november", "december"]
+
+
+# ---------------------------------------------------------------------------
 # Veckor
 # ---------------------------------------------------------------------------
 
 def shifts(lag, monday):
     """Passen måndag till söndag för ett lag, veckan som börjar på monday."""
     weeks_from_start = (monday - START).days // 7
-    return TYPES[ORDER[(OFFSET[lag] + weeks_from_start) % 5]]
+    return TYPES[ORDER[(OFFSET[lag] + weeks_from_start) % len(ORDER)]]
 
 
 def build_weeks():
@@ -98,6 +132,11 @@ def build_weeks():
     return weeks
 
 
+def long_date(day):
+    """Datum i löptext, till exempel 5 oktober 2026."""
+    return f"{day.day} {MANADER[day.month - 1]} {day.year}"
+
+
 # ---------------------------------------------------------------------------
 # Sidan
 # ---------------------------------------------------------------------------
@@ -106,69 +145,82 @@ def build_weeks():
 BODY = """\
 <div class="wrap">
 
-<header>
-  <h1>Skiftschema</h1>
-  <p class="sub">5-skift · oktober 2026 – juni 2027</p>
-</header>
-
-<div class="pick">
-  <span class="pick-label" id="picklabel">Välj skiftlag</span>
-  <div class="seg" role="group" aria-labelledby="picklabel">
+<header class="top">
+  <p class="overline">Skiftschema</p>
+  <h1 id="rubrik">Välj ditt skiftlag</h1>
+  <div class="seg" role="group" aria-label="Skiftlag">
     __BUTTONS__
   </div>
-</div>
+</header>
 
-<!-- Fylls av script.js: den här veckan och nästa -->
-<div id="hero"></div>
+<!-- Visas tills man har valt lag -->
+<p class="hint" id="valj">Välj ditt skiftlag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
 
-<ul class="legend">
-  __LEGEND__
-</ul>
-__CALBUTTON__
-<!-- Fylls av script.js: en tabell per månad -->
-<div id="months"></div>
+<!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
+<main id="schema" hidden>
 
-<div class="free-box">
-  <h2 id="freeh">Hela veckor lediga</h2>
-  <ul id="free"></ul>
-</div>
+  <section class="card next" id="next" aria-label="Nästa pass"></section>
+
+  <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
+
+  <div id="months"></div>
+
+  <section class="card">
+    <h2 id="freeh">Hela veckor lediga</h2>
+    <ul class="free" id="free"></ul>
+    <p class="fine" id="freenote" hidden>* Preliminärt, uträknat på cykeln.</p>
+  </section>
+
+  <section class="card">
+    <h2>Passen</h2>
+    <ul class="legend">
+      __LEGEND__
+    </ul>
+    <p class="fine">Passen börjar fem minuter före hel timme för överlämning.</p>
+  </section>
+
+  <section class="card">
+    <h2>Så går cykeln</h2>
+    <p class="fine">Alla lagen går samma __CYCLELENGTH__ veckor, förskjutna en vecka i taget.</p>
+    __CYCLE__
+  </section>
+__CALENDAR__
+</main>
 
 <footer>
-Schemat börjar måndag 5 oktober 2026. Alla fem lagen går samma cykel på fem veckor,
-förskjutna en vecka i taget: två nätter → två förmiddagar och en natt → ledig vecka →
-två kvällar och två nätter → fem dagpass. Passen börjar fem minuter före hel timme för överlämning.
-Storhelger körs som vanligt.
-<br><br>
-Avläst från utdelade schemablad till och med 27 december 2026.
-Därefter uträknat på cykeln. Stäm av mot nya blad när de kommer.
+<p>Schemat gäller __PERIOD__. Storhelger körs som vanligt.</p>
+__SOURCE__
 <p class="maker">© __YEAR__ <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
 </footer>
 
 </div>
 """
 
-TITLE = "Skiftschema alla lag"
-
-# Vem som har gjort appen. Visas i sidfoten och i sidans metadata.
-# Namnet i sidfoten länkar till webbplatsen.
-CREDIT = "J. Stork"
-CREDIT_URL = "https://jstork.se"
-TAGLINE = "Digitalt hantverk"
-COPYRIGHT_YEAR = "2026"   # året då appen först publicerades
-FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700"
-         "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
+# Kalenderdelen. Finns bara på den utlagda sidan, eftersom kalenderfilerna
+# inte följer med i förhandsvisningen. Länkarna fylls i av script.js.
+CALENDAR = """
+  <section class="card">
+    <h2>Lägg in passen i din kalender</h2>
+    <p class="fine">En prenumeration uppdateras av sig själv om schemat ändras.</p>
+    <a class="button" id="cal-sub" href="#">Prenumerera på kalendern</a>
+    <a class="textlink" id="cal-file" href="#">Ladda ner som fil i stället</a>
+    <p class="fine">Har du redan lagt in filen? Ta bort de gamla passen först, annars visas de dubbelt.</p>
+  </section>
+"""
 
 # Sidan: ett helt HTML-dokument som hämtar stil, data och logik från egna filer.
 DOCUMENT = """\
 <!DOCTYPE html>
-<html lang="sv" class="fristaende">
+<html lang="sv">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__TITLE__</title>
+<meta name="description" content="__DESCRIPTION__">
 <meta name="author" content="__CREDIT__">
-
+__ROBOTS__
 <!-- Ikon och utseende när sidan ligger på hemskärmen -->
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="favicon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -177,10 +229,8 @@ DOCUMENT = """\
 <meta name="theme-color" content="#e9edf1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11161f" media="(prefers-color-scheme: dark)">
 
-<!-- Typsnitt -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="__FONTS__">
+<!-- Typsnittet som används mest laddas i förväg så att texten inte hoppar -->
+<link rel="preload" href="typsnitt/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- Utseende, schemadata och logik. defer gör att skripten körs i ordning
      när hela sidan är inläst. data.js måste komma före script.js. -->
@@ -235,53 +285,93 @@ def dict_to_js(mapping):
 def legend_html():
     """Teckenförklaringen: ett märke per passkod, sist "Ledig"."""
     items = [
-        f'<li><span class="chip p-{code}">{code}</span>{name}<em>{times}</em></li>'
+        f'<li><span class="chip p-{code}">{code}</span><span>{name}<em>{times}</em></span></li>'
         for code, (name, times, _, _) in PASS.items()
     ]
-    items.append('<li class="single"><span class="chip p-off">–</span>Ledig</li>')
-    return "\n  ".join(items)
+    items.append('<li><span class="chip p-off">–</span><span>Ledig</span></li>')
+    return "\n      ".join(items)
 
 
-def buttons_html():
-    """Knapparna 1–5 i lagväljaren."""
-    return "\n    ".join(
-        f'<button type="button" id="b{lag}" data-lag="{lag}" aria-pressed="false" '
-        f'aria-label="Skiftlag {lag}">{lag}</button>'
-        for lag in range(1, 6)
+def cycle_html():
+    """Cykeln som en liten tabell: en rad per vecka, ett märke per dag."""
+    head = "".join(f'<th scope="col">{dag}</th>' for dag in DAGAR)
+    rows = []
+    for number, letter in enumerate(ORDER, start=1):
+        cells = "".join(
+            f'<td><span class="chip p-{code or "off"}">{code or "–"}</span></td>'
+            for code in TYPES[letter]
+        )
+        rows.append(f'<tr><th scope="row">Vecka {number}</th>{cells}</tr>')
+    return (
+        '<table class="cycle">\n'
+        f'      <thead><tr><td></td>{head}</tr></thead>\n'
+        '      <tbody>\n        ' + "\n        ".join(rows) + '\n      </tbody>\n'
+        '    </table>'
     )
 
 
-def body_html(with_calendar_button):
-    """Sidans innehåll. Kalenderknappen finns bara på den utlagda sidan."""
-    if with_calendar_button:
-        cal_button = '\n<a class="cal" id="cal" href="#">Lägg in passen i din kalender</a>\n'
-    else:
-        cal_button = ""
-    return fill(BODY, buttons=buttons_html(), legend=legend_html(), calbutton=cal_button,
-                credit=CREDIT, crediturl=CREDIT_URL, tagline=TAGLINE, year=COPYRIGHT_YEAR)
+def buttons_html():
+    """Knapparna i lagväljaren, en per lag."""
+    return "\n    ".join(
+        f'<button type="button" data-lag="{lag}" aria-pressed="false" '
+        f'aria-label="Skiftlag {lag}">{lag}</button>'
+        for lag in sorted(OFFSET)
+    )
+
+
+def source_html():
+    """Raden i sidfoten som säger hur mycket av schemat som är bekräftat."""
+    if CONFIRMED is None or CONFIRMED >= END:
+        return "<p>Avläst från utdelade schemablad.</p>"
+    return (
+        f"<p>Avläst från utdelade schemablad till och med {long_date(CONFIRMED)}. "
+        "Därefter uträknat på cykeln och märkt som preliminärt. "
+        "Stäm av mot nya blad när de kommer.</p>"
+    )
+
+
+def body_html(with_calendar):
+    """Sidans innehåll. Kalenderdelen finns bara på den utlagda sidan."""
+    return fill(
+        BODY,
+        buttons=buttons_html(),
+        legend=legend_html(),
+        cycle=cycle_html(),
+        cyclelength=str(len(ORDER)),
+        calendar=CALENDAR if with_calendar else "",
+        period=f"{long_date(START)} – {long_date(END)}",
+        source=source_html(),
+        credit=CREDIT,
+        crediturl=CREDIT_URL,
+        tagline=TAGLINE,
+        year=COPYRIGHT_YEAR,
+    )
 
 
 def data_js(weeks, calendar_address):
     """Innehållet i data.js: schemadatan som script.js använder."""
-    passes = {code: [name, times] for code, (name, times, _, _) in PASS.items()}
+    confirmed = CONFIRMED.isoformat() if CONFIRMED and CONFIRMED < END else ""
     return "\n".join([
         "// Skapad av build/bygg.py. Ändra inte här, ändra i byggskriptet.",
         "",
         "// Varje vecka i perioden: [måndagens datum, veckonummer].",
         f"const WEEKS = {rows_to_js(weeks)};",
         "",
-        "// De fem veckotyperna i cykeln. Pass måndag till söndag, \"\" = ledig.",
+        "// Veckotyperna i cykeln. Pass måndag till söndag, \"\" = ledig.",
         f"const TYPES = {dict_to_js(TYPES)};",
         f"const ORDER = {to_js(ORDER)};",
         "",
         "// Var i cykeln varje lag står första veckan (0 = A, 1 = B, ...).",
         f"const OFFSET = {to_js(OFFSET)};",
         "",
-        "// Passkod -> [namn, tider].",
-        f"const PASS = {dict_to_js(passes)};",
+        "// Passkod -> [namn, tider, hel timme då passet börjar, längd i timmar].",
+        f"const PASS = {dict_to_js({code: list(values) for code, values in PASS.items()})};",
         "",
         "// Datum -> helgdagens namn.",
         f"const RED = {dict_to_js(RED)};",
+        "",
+        "// Sista dagen som är bekräftad. Veckor efter den är preliminära. Tom = allt bekräftat.",
+        f"const CONFIRMED = {to_js(confirmed)};",
         "",
         "// Adress till kalenderfilen, där {n} byts mot lagnumret. Tom i förhandsvisningen.",
         f"const CAL = {to_js(calendar_address)};",
@@ -378,26 +468,31 @@ def main():
     weeks = build_weeks()
     style = read_source("style.css")
     script = read_source("script.js")
+    robots = '<meta name="robots" content="noindex">\n' if NOINDEX else ""
+
+    for code, (name, _, _, _) in PASS.items():
+        if "," in name or ";" in name:
+            raise SystemExit(f"Passnamnet för {code} får inte innehålla komma eller semikolon: {name}")
 
     # Sidan och schemadatan. {n} i adressen byts mot lagnumret av script.js.
-    write(ROT, "index.html", fill(DOCUMENT, title=TITLE, credit=CREDIT, fonts=FONTS,
-                                  body=body_html(True)))
+    write(ROT, "index.html", fill(DOCUMENT, title=TITLE, description=DESCRIPTION, credit=CREDIT,
+                                  robots=robots, body=body_html(True)))
     write(ROT, "data.js", data_js(weeks, "skiftlag{n}.ics"))
 
-    # Förhandsvisningen: allt i en fil. Den saknar kalenderknapp, eftersom
+    # Förhandsvisningen: allt i en fil. Den saknar kalenderdel, eftersom
     # kalenderfilerna bara finns på den utlagda sidan.
     write(UT, "forhandsvisning.html", fill(
         PREVIEW,
         title=TITLE,
         credit=CREDIT,
-        fonts=FONTS,
+        fonts=PREVIEW_FONTS,
         style=style,
         body=body_html(False),
         data=data_js(weeks, ""),
         script=script,
     ))
 
-    for lag in range(1, 6):
+    for lag in sorted(OFFSET):
         text, count = build_calendar(lag, weeks)
         # newline="" hindrar Python från att ändra radsluten i kalenderfilen.
         write(ROT, f"skiftlag{lag}.ics", text, newline="")

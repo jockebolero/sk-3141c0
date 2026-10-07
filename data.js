@@ -42,7 +42,7 @@ const WEEKS = [
   ["2027-06-21", 25]
 ];
 
-// De fem veckotyperna i cykeln. Pass måndag till söndag, "" = ledig.
+// Veckotyperna i cykeln. Pass måndag till söndag, "" = ledig.
 const TYPES = {
   "A": ["N", "N", "", "", "FM", "HD", "HD"],
   "B": ["", "", "FM", "FM", "N", "HN", "HN"],
@@ -55,13 +55,13 @@ const ORDER = "ABCDE";
 // Var i cykeln varje lag står första veckan (0 = A, 1 = B, ...).
 const OFFSET = {"1": 2, "2": 0, "3": 4, "4": 3, "5": 1};
 
-// Passkod -> [namn, tider].
+// Passkod -> [namn, tider, hel timme då passet börjar, längd i timmar].
 const PASS = {
-  "FM": ["Förmiddag", "05:55–14:00"],
-  "EM": ["Eftermiddag", "13:55–22:00"],
-  "N": ["Natt", "21:55–06:00"],
-  "HD": ["Helgdag", "05:55–18:00"],
-  "HN": ["Helgnatt", "17:55–06:00"]
+  "FM": ["Förmiddag", "05:55–14:00", 6, 8],
+  "EM": ["Eftermiddag", "13:55–22:00", 14, 8],
+  "N": ["Natt", "21:55–06:00", 22, 8],
+  "HD": ["Helgpass dag", "05:55–18:00", 6, 12],
+  "HN": ["Helgpass natt", "17:55–06:00", 18, 12]
 };
 
 // Datum -> helgdagens namn.
@@ -81,6 +81,9 @@ const RED = {
   "2027-06-25": "Midsommarafton",
   "2027-06-26": "Midsommardagen"
 };
+
+// Sista dagen som är bekräftad. Veckor efter den är preliminära. Tom = allt bekräftat.
+const CONFIRMED = "2026-12-27";
 
 // Adress till kalenderfilen, där {n} byts mot lagnumret. Tom i förhandsvisningen.
 const CAL = "skiftlag{n}.ics";

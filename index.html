@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="sv" class="fristaende">
+<html lang="sv">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Skiftschema alla lag</title>
+<title>Skiftschema</title>
+<meta name="description" content="Skiftschema för alla skiftlag.">
 <meta name="author" content="J. Stork">
+<meta name="robots" content="noindex">
 
 <!-- Ikon och utseende när sidan ligger på hemskärmen -->
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="favicon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,10 +18,8 @@
 <meta name="theme-color" content="#e9edf1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11161f" media="(prefers-color-scheme: dark)">
 
-<!-- Typsnitt -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<!-- Typsnittet som används mest laddas i förväg så att texten inte hoppar -->
+<link rel="preload" href="typsnitt/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- Utseende, schemadata och logik. defer gör att skripten körs i ordning
      när hela sidan är inläst. data.js måste komma före script.js. -->
@@ -29,52 +30,77 @@
 <body>
 <div class="wrap">
 
-<header>
-  <h1>Skiftschema</h1>
-  <p class="sub">5-skift · oktober 2026 – juni 2027</p>
+<header class="top">
+  <p class="overline">Skiftschema</p>
+  <h1 id="rubrik">Välj ditt skiftlag</h1>
+  <div class="seg" role="group" aria-label="Skiftlag">
+    <button type="button" data-lag="1" aria-pressed="false" aria-label="Skiftlag 1">1</button>
+    <button type="button" data-lag="2" aria-pressed="false" aria-label="Skiftlag 2">2</button>
+    <button type="button" data-lag="3" aria-pressed="false" aria-label="Skiftlag 3">3</button>
+    <button type="button" data-lag="4" aria-pressed="false" aria-label="Skiftlag 4">4</button>
+    <button type="button" data-lag="5" aria-pressed="false" aria-label="Skiftlag 5">5</button>
+  </div>
 </header>
 
-<div class="pick">
-  <span class="pick-label" id="picklabel">Välj skiftlag</span>
-  <div class="seg" role="group" aria-labelledby="picklabel">
-    <button type="button" id="b1" data-lag="1" aria-pressed="false" aria-label="Skiftlag 1">1</button>
-    <button type="button" id="b2" data-lag="2" aria-pressed="false" aria-label="Skiftlag 2">2</button>
-    <button type="button" id="b3" data-lag="3" aria-pressed="false" aria-label="Skiftlag 3">3</button>
-    <button type="button" id="b4" data-lag="4" aria-pressed="false" aria-label="Skiftlag 4">4</button>
-    <button type="button" id="b5" data-lag="5" aria-pressed="false" aria-label="Skiftlag 5">5</button>
-  </div>
-</div>
+<!-- Visas tills man har valt lag -->
+<p class="hint" id="valj">Välj ditt skiftlag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
 
-<!-- Fylls av script.js: den här veckan och nästa -->
-<div id="hero"></div>
+<!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
+<main id="schema" hidden>
 
-<ul class="legend">
-  <li><span class="chip p-FM">FM</span>Förmiddag<em>05:55–14:00</em></li>
-  <li><span class="chip p-EM">EM</span>Eftermiddag<em>13:55–22:00</em></li>
-  <li><span class="chip p-N">N</span>Natt<em>21:55–06:00</em></li>
-  <li><span class="chip p-HD">HD</span>Helgdag<em>05:55–18:00</em></li>
-  <li><span class="chip p-HN">HN</span>Helgnatt<em>17:55–06:00</em></li>
-  <li class="single"><span class="chip p-off">–</span>Ledig</li>
-</ul>
+  <section class="card next" id="next" aria-label="Nästa pass"></section>
 
-<a class="cal" id="cal" href="#">Lägg in passen i din kalender</a>
+  <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
 
-<!-- Fylls av script.js: en tabell per månad -->
-<div id="months"></div>
+  <div id="months"></div>
 
-<div class="free-box">
-  <h2 id="freeh">Hela veckor lediga</h2>
-  <ul id="free"></ul>
-</div>
+  <section class="card">
+    <h2 id="freeh">Hela veckor lediga</h2>
+    <ul class="free" id="free"></ul>
+    <p class="fine" id="freenote" hidden>* Preliminärt, uträknat på cykeln.</p>
+  </section>
+
+  <section class="card">
+    <h2>Passen</h2>
+    <ul class="legend">
+      <li><span class="chip p-FM">FM</span><span>Förmiddag<em>05:55–14:00</em></span></li>
+      <li><span class="chip p-EM">EM</span><span>Eftermiddag<em>13:55–22:00</em></span></li>
+      <li><span class="chip p-N">N</span><span>Natt<em>21:55–06:00</em></span></li>
+      <li><span class="chip p-HD">HD</span><span>Helgpass dag<em>05:55–18:00</em></span></li>
+      <li><span class="chip p-HN">HN</span><span>Helgpass natt<em>17:55–06:00</em></span></li>
+      <li><span class="chip p-off">–</span><span>Ledig</span></li>
+    </ul>
+    <p class="fine">Passen börjar fem minuter före hel timme för överlämning.</p>
+  </section>
+
+  <section class="card">
+    <h2>Så går cykeln</h2>
+    <p class="fine">Alla lagen går samma 5 veckor, förskjutna en vecka i taget.</p>
+    <table class="cycle">
+      <thead><tr><td></td><th scope="col">Mån</th><th scope="col">Tis</th><th scope="col">Ons</th><th scope="col">Tors</th><th scope="col">Fre</th><th scope="col">Lör</th><th scope="col">Sön</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Vecka 1</th><td><span class="chip p-N">N</span></td><td><span class="chip p-N">N</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-FM">FM</span></td><td><span class="chip p-HD">HD</span></td><td><span class="chip p-HD">HD</span></td></tr>
+        <tr><th scope="row">Vecka 2</th><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-FM">FM</span></td><td><span class="chip p-FM">FM</span></td><td><span class="chip p-N">N</span></td><td><span class="chip p-HN">HN</span></td><td><span class="chip p-HN">HN</span></td></tr>
+        <tr><th scope="row">Vecka 3</th><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td></tr>
+        <tr><th scope="row">Vecka 4</th><td><span class="chip p-EM">EM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-N">N</span></td><td><span class="chip p-N">N</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td></tr>
+        <tr><th scope="row">Vecka 5</th><td><span class="chip p-FM">FM</span></td><td><span class="chip p-FM">FM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Lägg in passen i din kalender</h2>
+    <p class="fine">En prenumeration uppdateras av sig själv om schemat ändras.</p>
+    <a class="button" id="cal-sub" href="#">Prenumerera på kalendern</a>
+    <a class="textlink" id="cal-file" href="#">Ladda ner som fil i stället</a>
+    <p class="fine">Har du redan lagt in filen? Ta bort de gamla passen först, annars visas de dubbelt.</p>
+  </section>
+
+</main>
 
 <footer>
-Schemat börjar måndag 5 oktober 2026. Alla fem lagen går samma cykel på fem veckor,
-förskjutna en vecka i taget: två nätter → två förmiddagar och en natt → ledig vecka →
-två kvällar och två nätter → fem dagpass. Passen börjar fem minuter före hel timme för överlämning.
-Storhelger körs som vanligt.
-<br><br>
-Avläst från utdelade schemablad till och med 27 december 2026.
-Därefter uträknat på cykeln. Stäm av mot nya blad när de kommer.
+<p>Schemat gäller 5 oktober 2026 – 27 juni 2027. Storhelger körs som vanligt.</p>
+<p>Avläst från utdelade schemablad till och med 27 december 2026. Därefter uträknat på cykeln och märkt som preliminärt. Stäm av mot nya blad när de kommer.</p>
 <p class="maker">© 2026 <a href="https://jstork.se"><b>J. Stork</b></a> · Digitalt hantverk</p>
 </footer>
 

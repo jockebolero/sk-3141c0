@@ -12,15 +12,18 @@ index.html                      Sidans innehåll
 style.css                       Utseendet
 script.js                       Logiken: ritar upp schemat och byter lag
 data.js                         Schemadatan som script.js använder
-skiftlag1.ics – skiftlag5.ics   Kalenderfilerna bakom knappen på sidan
-apple-touch-icon.png            Ikon på hemskärmen
-favicon.png                     Ikon i webbläsarens flik
+skiftlag1.ics – skiftlag5.ics   Kalenderfilerna bakom knapparna på sidan
+sw.js                           Offline-stödet: sparar sidan i telefonen
+manifest.webmanifest            Namn, färger och ikoner för hemskärmen
+typsnitt/                       IBM Plex Sans i fem snitt, med licens
+favicon.png, apple-touch-icon.png, icon-*.png   Ikoner
 
 build/
   bygg.py                       Bygger index.html, data.js och kalenderfilerna
+  ikoner.py                     Ritar ikonerna (behövs bara om ikonen ändras)
 ```
 
-`style.css` och `script.js` skrivs för hand.
+`style.css`, `script.js`, `sw.js` och `manifest.webmanifest` skrivs för hand.
 
 `index.html`, `data.js` och kalenderfilerna skapas av `build/bygg.py` och ska inte ändras
 direkt, eftersom ändringen skrivs över vid nästa bygge.
@@ -34,16 +37,52 @@ Rotationen, tiderna och de röda dagarna står överst i `build/bygg.py`, under 
 
 Skriptet behöver bara Python 3, inga extra paket.
 
+När nya schemablad har kommit: flytta fram `CONFIRMED` till sista dagen som är avläst
+från bladen. Veckor efter den dagen märks som preliminära på sidan.
+
 ## Ändra utseende eller beteende
 
 Ändra direkt i `style.css` eller `script.js`. Det behövs inget bygge.
 
-Vilket lag som visas för den som inte har valt något än står överst i `script.js`,
-i konstanten `STANDARDLAG`.
+Utseendet bygger på fem textstorlekar och två hörnradier, som står som variabler överst
+i `style.css`. Använd dem i stället för nya värden.
 
-## Länka till ett visst lag
+## Vilket lag som visas
 
-Lägg till `#lag` och lagets nummer sist i adressen, till exempel `#lag4`.
+1. Laget man själv valde senast på sidan.
+2. Annars laget i adressen, till exempel `#lag4`.
+3. Annars inget: sidan ber besökaren välja.
+
+Det egna valet går före adressen. Annars fastnar en app på hemskärmen på laget som stod
+i länken man fick. Vill man ha ett förvalt lag i stället för frågan sätter man
+`STANDARDLAG` överst i `script.js`.
+
+## Hålla sidan aktuell
+
+Sidan ritas om när datumet eller passet ändras, även om den ligger öppen över natten
+som app på hemskärmen.
+
+## Prova en annan tidpunkt
+
+Lägg till `?nu=` och en tidpunkt i adressen för att se hur sidan ser ut då:
+
+    index.html?nu=2026-12-30T02:00#lag2
+
+## Utan nät
+
+`sw.js` sparar sidan i telefonen vid första besöket. Sidan hämtas från nätet när det går
+och från den sparade kopian annars. Byt namn på `CACHE` överst i `sw.js` om gamla sparade
+filer ska rensas bort.
+
+## Kalendern
+
+Sidan erbjuder en prenumeration (uppdateras av sig själv) och en fil att ladda ner.
+Varje pass har ett fast id i kalenderfilen. Ändra inte hur id:t byggs upp i `bygg.py`,
+då blir det dubbletter hos dem som redan har lagt in passen.
+
+## Sökmotorer
+
+Sidan är till för kollegorna och ber sökmotorer att inte visa den (`NOINDEX` i `bygg.py`).
 
 ## Varifrån datan kommer
 

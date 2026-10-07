@@ -2,35 +2,84 @@
  * Utseendet för skiftschemat (index.html).
  * Gjord av J. Stork.
  *
- * Layout: lagväljare överst, sedan veckoremsor och därefter månad för månad
- * i en smal kolumn som passar en telefon.
+ * Layout: rubrik och lagväljare överst, sedan nästa pass, två veckoremsor
+ * och därefter månad för månad i en smal kolumn som passar en telefon.
  *
- * Alla färger är variabler som sätts överst. Mörkt läge byter bara
- * variablernas värden, resten av reglerna är gemensamma.
+ * Färger, textstorlekar och hörnradier är variabler som sätts överst.
+ * Mörkt läge byter bara färgernas värden, resten av reglerna är gemensamma.
+ *
+ * Systemet är medvetet litet:
+ *   fem textstorlekar   --t-xs, --t-sm, --t-md, --t-lg, --t-xl
+ *   två hörnradier      --r-lg för kort och knappar, --r-sm för rutor och märken
  */
 
-/* Färger och typsnitt i ljust läge */
+/* Typsnitt: IBM Plex Sans och IBM Plex Sans Condensed, i mappen typsnitt/ */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-weight: 400;
+  font-display: swap;
+  src: url("typsnitt/ibm-plex-sans-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-weight: 500;
+  font-display: swap;
+  src: url("typsnitt/ibm-plex-sans-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-weight: 600;
+  font-display: swap;
+  src: url("typsnitt/ibm-plex-sans-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Condensed";
+  font-weight: 600;
+  font-display: swap;
+  src: url("typsnitt/ibm-plex-sans-condensed-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Condensed";
+  font-weight: 700;
+  font-display: swap;
+  src: url("typsnitt/ibm-plex-sans-condensed-700.woff2") format("woff2");
+}
+
+/* Färger i ljust läge, samt storlekar som gäller i båda lägena */
 :root {
   --paper: #e9edf1;
   --card: #ffffff;
   --ink: #16202e;
   --muted: #4d5c6e;
   --line: #c9d3dd;
+
+  /* Passen. Vardagar följer dygnet: gult, orange, mörkblått.
+     Helgpassen har en egen färgfamilj: ljus för dag, mörk för natt. */
   --fm: #ffd166;
   --em: #e8833a;
   --n: #2e3a66;
-  --hd: linear-gradient(135deg, #ffd166 0%, #ffd166 42%, #e8833a 100%);
-  --hn: linear-gradient(135deg, #473d6b 0%, #141a30 100%);
+  --hd: #7cc4b8;
+  --hn: #1d5c58;
   --off: #f2f5f8;
-  --offink: #75828f;
-  --ring: #16202e;
+  --offink: #5a6877;
+
   --red: #b3261e;
   --on-light: #16202e;
   --on-dark: #ffffff;
   --sel: #16202e;
   --sel-ink: #ffffff;
+
   --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: "IBM Plex Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+
+  --t-xs: .75rem;     /* 12 px: etiketter, veckodagar, datum i rutor */
+  --t-sm: .8125rem;   /* 13 px: finstilt, passkoder, sidfot */
+  --t-md: .9375rem;   /* 15 px: löptext, knappar, rubriker i kort */
+  --t-lg: 1.125rem;   /* 18 px: månadsrubriker, nästa pass */
+  --t-xl: 1.75rem;    /* 28 px: sidans rubrik */
+
+  --r-lg: 10px;
+  --r-sm: 6px;
 }
 
 /* Mörkt läge när telefonen är inställd på det */
@@ -39,16 +88,15 @@
     --paper: #11161f;
     --card: #1a212c;
     --ink: #e8edf3;
-    --muted: #8c9bab;
+    --muted: #9aa7b5;
     --line: #2c3745;
     --fm: #e5b94d;
     --em: #cf6f2b;
     --n: #4a5a96;
-    --hd: linear-gradient(135deg, #e5b94d 0%, #e5b94d 42%, #cf6f2b 100%);
-    --hn: linear-gradient(135deg, #5a4e85 0%, #232c45 100%);
+    --hd: #6fb5a9;
+    --hn: #2f7d77;
     --off: #1f2733;
-    --offink: #7d8b9a;
-    --ring: #e8edf3;
+    --offink: #9aa7b5;
     --red: #ff8a80;
     --sel: #e8edf3;
     --sel-ink: #11161f;
@@ -61,16 +109,15 @@
   --paper: #11161f;
   --card: #1a212c;
   --ink: #e8edf3;
-  --muted: #8c9bab;
+  --muted: #9aa7b5;
   --line: #2c3745;
   --fm: #e5b94d;
   --em: #cf6f2b;
   --n: #4a5a96;
-  --hd: linear-gradient(135deg, #e5b94d 0%, #e5b94d 42%, #cf6f2b 100%);
-  --hn: linear-gradient(135deg, #5a4e85 0%, #232c45 100%);
+  --hd: #6fb5a9;
+  --hn: #2f7d77;
   --off: #1f2733;
-  --offink: #7d8b9a;
-  --ring: #e8edf3;
+  --offink: #9aa7b5;
   --red: #ff8a80;
   --sel: #e8edf3;
   --sel-ink: #11161f;
@@ -81,69 +128,77 @@
 * {
   box-sizing: border-box;
 }
+html {
+  /* Håller innehållet undan från telefonens statusfält och hemindikator
+     när sidan ligger på hemskärmen. */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--body);
-  font-size: 16px;
+  font-size: var(--t-md);
+  line-height: 1.45;
   -webkit-text-size-adjust: 100%;
+}
+[hidden] {
+  display: none !important;
 }
 .wrap {
   max-width: 660px;
   margin: 0 auto;
   padding-inline: 16px;
-  padding-block: 14px 60px;
+  padding-block: 20px 56px;
+}
+h1,
+h2,
+p,
+ul {
+  margin: 0;
+}
+ul {
+  padding: 0;
+  list-style: none;
 }
 
-/* Sidhuvud */
-header {
-  padding: 2px 2px 10px;
+/* Sidhuvud: liten överrad, lagets namn och lagväljaren */
+.top {
+  margin-bottom: 16px;
+}
+.overline {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 h1 {
   font-family: var(--display);
   font-weight: 700;
-  font-size: 1.4rem;
-  line-height: 1.1;
-  margin: 0 0 2px;
-}
-.sub {
-  color: var(--muted);
-  font-size: .82rem;
-  margin: 0;
+  font-size: var(--t-xl);
+  line-height: 1.15;
+  margin-bottom: 12px;
 }
 
-/* Lagväljare. Ligger kvar överst när man scrollar. */
-.pick {
-  position: sticky;
-  top: env(safe-area-inset-top, 0px);
-  z-index: 5;
-  background: var(--paper);
-  padding: 8px 0 10px;
-  margin: 0 0 6px;
-}
-.pick-label {
-  font-size: .74rem;
-  color: var(--muted);
-  margin: 0 2px 5px;
-  display: block;
-}
+/* Lagväljaren */
 .seg {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: 4px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   padding: 4px;
 }
 .seg button {
+  flex: 1;
   font-family: var(--display);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: var(--t-lg);
   min-height: 44px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -152,188 +207,64 @@ h1 {
   background: var(--sel);
   color: var(--sel-ink);
 }
-.seg button:focus-visible {
-  outline: 2px solid var(--ring);
+.seg button:focus-visible,
+.button:focus-visible,
+.textlink:focus-visible,
+summary:focus-visible,
+footer a:focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-/* Veckoremsor: den här veckan och nästa */
-.now {
+/* Texten som visas innan man har valt lag */
+.hint {
+  padding: 28px 8px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Kort: vit yta med tunn ram */
+.card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 12px 12px;
-  margin-bottom: 8px;
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-bottom: 12px;
 }
-.now h2 {
-  font-family: var(--display);
-  font-size: .95rem;
-  margin: 0 0 10px;
+.card h2 {
+  font-size: var(--t-md);
   font-weight: 600;
+  margin-bottom: 10px;
+}
+.card h2 span {
+  font-weight: 400;
   color: var(--muted);
 }
-.hrow {
-  display: flex;
-  gap: 4px;
-}
-.hd {
-  flex: 1;
-  text-align: center;
-  min-width: 0;
-}
-.hd span {
-  display: block;
-  font-size: .66rem;
+.fine {
+  font-size: var(--t-sm);
   color: var(--muted);
-  margin-bottom: 3px;
-}
-.hd em {
-  display: block;
-  font-style: normal;
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: .86rem;
-  padding: 9px 0;
-  border-radius: 6px;
 }
 
-/* Teckenförklaring */
-.legend {
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 22px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-  font-size: .84rem;
-}
-.legend li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 8px;
-  align-items: center;
-}
-.legend li .chip {
-  grid-row: span 2;
-}
-.legend li.single .chip {
-  grid-row: auto;
-}
-.legend em {
-  display: block;
-  font-style: normal;
-  font-size: .74rem;
-  color: var(--muted);
-  line-height: 1.2;
-}
-
-/* Små passmärken i teckenförklaringen */
+/* Passmärken. Används i nästa pass, veckoremsorna, förklaringen och cykeln. */
 .chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 22px;
-  border-radius: 5px;
+  min-width: 34px;
+  height: 26px;
+  border-radius: var(--r-sm);
   font-family: var(--display);
   font-weight: 700;
-  font-size: .75rem;
+  font-size: var(--t-sm);
 }
 .chip.p-off {
   border: 1px dashed var(--line);
 }
-
-/* Knapp som lägger in passen i kalendern */
-.cal {
-  display: block;
-  text-align: center;
-  padding: 12px;
-  margin: -8px 0 20px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  font-weight: 600;
-  font-size: .9rem;
-  text-decoration: none;
-}
-.cal:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-/* Månadsrubrik och kalenderrutnät */
-h2.month {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.05rem;
-  margin: 22px 0 8px;
-  padding-bottom: 5px;
-  border-bottom: 2px solid var(--ink);
-}
-h2.month span {
-  color: var(--muted);
-  font-weight: 500;
-}
-table.grid {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 3px;
-  table-layout: fixed;
-  font-variant-numeric: tabular-nums;
-}
-table.grid thead th {
-  font-size: .68rem;
-  color: var(--muted);
-  font-weight: 500;
-  padding-bottom: 2px;
-}
-th.wk {
-  width: 26px;
-  font-family: var(--display);
-  font-size: .75rem;
-  color: var(--muted);
-  font-weight: 600;
-}
-td.d {
-  border-radius: 6px;
-  text-align: center;
-  padding: 6px 1px 5px;
-  border: 1px solid transparent;
-}
-td .num {
-  display: block;
-  font-size: .72rem;
-  opacity: .9;
-  line-height: 1.1;
-  font-weight: 500;
-}
-td .code {
-  display: block;
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: .8rem;
-  line-height: 1.2;
-}
-
-/* Tillstånd: passerad dag, i dag, röd dag */
-td.past {
-  filter: grayscale(1);
-  opacity: .3;
-}
-td.today {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 1.5px var(--ring);
-}
-td.red.p-off .num {
-  color: var(--red);
-  opacity: 1;
-  font-weight: 700;
-}
-td.red:not(.p-off) .num {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  font-weight: 700;
+.chip.big {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  font-size: var(--t-lg);
 }
 
 /* Passfärger. Ljusa pass har mörk text, mörka pass har vit text. */
@@ -362,88 +293,310 @@ td.red:not(.p-off) .num {
   color: var(--offink);
 }
 
-/* Röda dagar, listade under varje månad */
-ul.notes {
-  list-style: none;
-  padding: 8px 10px;
-  margin: 8px 0 0;
-  background: var(--card);
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  font-size: .82rem;
+/* Nästa pass: sidans tyngdpunkt */
+.next {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.next .label {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   color: var(--muted);
 }
-ul.notes li {
+.next .main {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: var(--t-lg);
+  line-height: 1.25;
+}
+.next .detail {
+  font-size: var(--t-md);
+  color: var(--muted);
+}
+
+/* Veckoremsor: den här veckan och nästa */
+.strip {
+  display: flex;
+  gap: 4px;
+}
+.strip + h2 {
+  margin-top: 16px;
+}
+.strip li {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+}
+.strip .wd {
+  font-size: var(--t-xs);
+  color: var(--muted);
+}
+.strip .dt {
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+.strip .chip {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  margin-top: 2px;
+}
+.strip li.today {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+/* Månad: rubrik med linje under, och ett kalenderrutnät */
+.month {
+  margin: 24px 0 0;
+}
+.month h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: var(--t-lg);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--ink);
+}
+.month h2 span {
+  color: var(--muted);
+}
+.tag {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--body);
+  font-style: normal;
+  font-weight: 500;
+  font-size: var(--t-xs);
+  color: var(--muted);
+}
+table.grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+table.grid caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+table.grid th {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+table.grid thead th {
+  padding-bottom: 2px;
+}
+th.wk {
+  width: 26px;
+}
+td.d {
+  position: relative;
+  border-radius: var(--r-sm);
+  text-align: center;
+  padding: 6px 1px 5px;
+  border: 1px solid transparent;
+}
+td .num {
+  display: block;
+  font-size: var(--t-xs);
+  line-height: 1.2;
+  font-weight: 500;
+}
+td .code {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  line-height: 1.2;
+}
+
+/* Tillstånd: passerad dag, i dag, röd dag */
+td.past {
+  filter: grayscale(1);
+  opacity: .35;
+}
+td.today {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+/* Röd dag: en röd prick i rutans hörn. På lediga dagar är datumet också rött. */
+td.red::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 1.5px var(--card);
+}
+td.red.p-off .num {
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* Raden som skiljer bekräftat schema från uträknat */
+tr.boundary td {
+  padding: 6px 4px;
+  text-align: center;
+  font-size: var(--t-xs);
+  color: var(--muted);
+  border-top: 1px dashed var(--muted);
+}
+
+/* Röda dagar, listade under varje månad */
+.notes {
+  padding: 8px 10px;
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.notes li {
   padding: 2px 0;
 }
-ul.notes b {
+.notes b {
   color: var(--ink);
 }
 
-/* Lista med hela lediga veckor */
-.free-box {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 14px 12px;
-  margin-top: 30px;
+/* Tidigare månader, hopfällda */
+.earlier {
+  margin-top: 16px;
 }
-.free-box h2 {
-  font-family: var(--display);
-  margin: 0 0 8px;
-  font-size: 1rem;
-}
-.free-box ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: .88rem;
+.earlier summary {
+  padding: 10px 0;
+  font-size: var(--t-sm);
+  font-weight: 500;
   color: var(--muted);
+  cursor: pointer;
+}
+
+/* Korten efter månaderna */
+#months {
+  margin-bottom: 28px;
+}
+
+/* Lista med hela lediga veckor */
+.free {
   columns: 2;
   column-gap: 16px;
+  color: var(--muted);
 }
-.free-box li {
+.free li {
   padding: 2px 0;
   break-inside: avoid;
 }
-.free-box b {
+.free b {
   color: var(--ink);
   font-family: var(--display);
+}
+.free + .fine {
+  margin-top: 8px;
+}
+
+/* Teckenförklaring */
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend em {
+  display: block;
+  font-style: normal;
+  font-size: var(--t-sm);
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+/* Cykeln som liten tabell */
+table.cycle {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+}
+table.cycle th {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+/* Första kolumnen bestämmer bredden i en tabell med fast layout */
+table.cycle thead td {
+  width: 60px;
+}
+table.cycle th[scope="row"] {
+  text-align: left;
+  white-space: nowrap;
+}
+table.cycle .chip {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Knapp och textlänk i kalenderdelen */
+.button {
+  display: block;
+  margin: 12px 0 4px;
+  padding: 12px;
+  border-radius: var(--r-lg);
+  background: var(--sel);
+  color: var(--sel-ink);
+  text-align: center;
+  font-weight: 600;
+  text-decoration: none;
+}
+.textlink {
+  display: block;
+  padding: 10px 0;
+  text-align: center;
+  font-size: var(--t-sm);
+  color: var(--ink);
 }
 
 /* Sidfot */
 footer {
-  margin-top: 26px;
-  font-size: .78rem;
-  color: var(--muted);
-  line-height: 1.5;
+  margin-top: 28px;
+  padding-top: 14px;
   border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
-/* Copyright och avsändare längst ned */
-.maker {
-  margin: 14px 0 0;
-  font-size: .78rem;
+  font-size: var(--t-sm);
   color: var(--muted);
+}
+footer p + p {
+  margin-top: 10px;
+}
+footer a {
+  color: inherit;
 }
 .maker b {
   color: var(--ink);
   font-weight: 600;
-}
-.maker a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.maker a:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-/* När sidan ligger på hemskärmen: håll innehållet undan från telefonens
-   statusfält och hemindikator. Klassen sätts på <html> i index.html. */
-:root.fristaende {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
