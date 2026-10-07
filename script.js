@@ -135,34 +135,109 @@ function currentShift(lag, now) {
 }
 
 // ---------------------------------------------------------------------------
-// Överst: nästa pass
+// Överst: i dag och nästa pass
 // ---------------------------------------------------------------------------
 
 function nextHtml(lag, now) {
   const shift = currentShift(lag, now);
+  // Översta raden: dagens datum och vad som gäller i dag enligt schemat.
+  // Efter ett nattpass som började i går är man ledig först när passet är slut.
+  const todays = allShifts(lag).find(other => iso(other.day) === iso(now));
+  const overnight = shift && shift.start <= now && !todays;
+  const status = todays ? PASS[todays.code][0] : overnight ? "Ledig efter " + clock(shift.end) : "Ledig";
+  const date = '<p class="date"><span>I dag <span>' + longDate(now) + '</span></span>' +
+               '<b>' + status + '</b></p>';
   if (!shift) {
-    return '<p class="label">Schemat är slut</p>' +
+    return date + '<p class="label">Schemat är slut</p>' +
            '<p class="fine">Det finns inga fler pass i den här perioden.</p>';
   }
 
+  const leave = leaveHtml(lag, now, shift);
   const name = PASS[shift.code][0];
   const times = PASS[shift.code][1];
   const chip = '<span class="chip big p-' + shift.code + '" aria-hidden="true">' + shift.code + '</span>';
 
   if (shift.start <= now) {
-    return chip + '<div><p class="label">Du jobbar nu</p>' +
+    return date + '<div class="row">' + chip + '<div><p class="label">Du jobbar nu</p>' +
            '<p class="main">' + name + '</p>' +
-           '<p class="detail">Slutar ' + clock(shift.end) + '</p></div>';
+           '<p class="detail">Slutar ' + clock(shift.end) + '</p></div></div>' + leave;
   }
 
   const days = daysBetween(now, shift.start);
   const when = days === 0 ? "i dag" : days === 1 ? "i morgon" : "om " + days + " dagar";
-  const startsToday = allShifts(lag).some(other => iso(other.day) === iso(now));
-  const label = days === 0 || startsToday ? "Nästa pass" : "Ledig i dag · nästa pass";
 
-  return chip + '<div><p class="label">' + label + '</p>' +
-         '<p class="main">' + capitalize(longDate(shift.start)) + '</p>' +
-         '<p class="detail">' + name + ' ' + times + ' · ' + when + '</p></div>';
+  // Börjar passet i dag står datumet redan överst. Då är passets namn huvudsaken.
+  const main = days === 0 ? name : capitalize(longDate(shift.start));
+  const detail = days === 0 ? times + ' · i dag' : name + ' ' + times + ' · ' + when;
+
+  return date + '<div class="row">' + chip + '<div><p class="label">Nästa pass</p>' +
+         '<p class="main">' + main + '</p>' +
+         '<p class="detail">' + detail + '</p></div></div>' + leave;
+}
+
+// ---------------------------------------------------------------------------
+// Överst: nästa ledighet
+// ---------------------------------------------------------------------------
+
+// Minsta antal lediga dygn i följd som räknas som en ledighet.
+// En enstaka ledig dag mitt i veckan räknas inte.
+const LEDIGHET_MINST = 2;
+
+// Alla ledigheter för ett lag som { start, end, weekIndex }, i tidsordning.
+// En ledighet som går ända till periodens sista dag tas inte med, eftersom
+// ingen vet hur länge den fortsätter.
+function leaves(lag) {
+  const list = [];
+  let run = null;
+  WEEKS.forEach((week, weekIndex) => {
+    shifts(lag, weekIndex).forEach((code, i) => {
+      const day = dayOf(week[0], i);
+      if (code) {
+        if (run && run.days >= LEDIGHET_MINST) list.push(run);
+        run = null;
+      } else if (run) {
+        run.end = day;
+        run.days++;
+      } else {
+        run = { start: day, end: day, days: 1, weekIndex: weekIndex };
+      }
+    });
+  });
+  return list;
+}
+
+// Två datum som en period: "19–25 oktober" eller "30 okt – 2 nov".
+function period(start, end) {
+  if (start.getMonth() === end.getMonth()) {
+    return start.getDate() + "–" + end.getDate() + " " + MAN[end.getMonth()];
+  }
+  return shortDate(start) + " – " + shortDate(end);
+}
+
+// Raden längst ner i kortet: när man blir ledig nästa gång och hur många
+// pass som är kvar dit. Är man redan ledig står det hur länge.
+function leaveHtml(lag, now, shift) {
+  const today = iso(now);
+  const working = shift.start <= now;
+  // Ledigheter som inte är slut. Den som slutar i dag är i praktiken över.
+  const coming = leaves(lag).filter(leave => iso(leave.end) > today);
+  const leave = coming[0];
+  if (!leave) return "";
+
+  const note = isPreliminary(leave.weekIndex) ? ' · preliminärt' : '';
+
+  const left = allShifts(lag).filter(other =>
+    other.end > now && iso(other.day) < iso(leave.start)).length;
+
+  // Redan ledig, eller inga pass kvar före ledigheten (kvällen innan den börjar).
+  if (iso(leave.start) <= today || left === 0) {
+    const lead = working ? "Ledig efter passet" : "Ledig";
+    return '<p class="leave"><span class="label">' + lead + '</span> ' +
+           '<b>till och med ' + longDate(leave.end) + '</b>' + note + '</p>';
+  }
+
+  return '<p class="leave"><span class="label">Nästa ledighet</span> ' +
+         '<b>' + period(leave.start, leave.end) + '</b> · ' + left + ' pass kvar' + note + '</p>';
 }
 
 // ---------------------------------------------------------------------------
@@ -265,7 +340,7 @@ function monthHtml(lag, year, month, today, state) {
   return '<section class="month">' +
          '<h2>' + MAN[month] + ' <span>' + year + '</span>' +
          (allPreliminary ? ' <em class="tag">Preliminärt</em>' : '') + '</h2>' +
-         '<table class="grid"><caption>' + capitalize(name) + ', skiftlag ' + lag + '</caption>' +
+         '<table class="grid"><caption>' + capitalize(name) + ', lag ' + lag + '</caption>' +
          '<thead><tr><th class="wk" scope="col" aria-label="Vecka">v</th>' +
          DAG.map((short, i) => '<th scope="col" aria-label="' + DAG_LANG[i] + '">' + short + '</th>').join("") +
          '</tr></thead><tbody>' + rows + '</tbody></table>' +
@@ -341,13 +416,13 @@ function render() {
   document.getElementById("valj").hidden = Boolean(lag);
 
   if (!lag) {
-    document.getElementById("rubrik").textContent = "Välj ditt skiftlag";
+    document.getElementById("rubrik").textContent = "Välj ditt lag";
     document.title = "Skiftschema";
     return;
   }
 
-  document.getElementById("rubrik").textContent = "Skiftlag " + lag;
-  document.title = "Skiftlag " + lag + " – skiftschema";
+  document.getElementById("rubrik").textContent = "Lag " + lag;
+  document.title = "Lag " + lag + " – skiftschema";
 
   document.getElementById("next").innerHTML = nextHtml(lag, now);
   const weeks = weeksHtml(lag, today);
@@ -355,7 +430,7 @@ function render() {
   document.getElementById("weeks").hidden = !weeks;
   document.getElementById("months").innerHTML = monthsHtml(lag, today);
   document.getElementById("free").innerHTML = freeWeeksHtml(lag, today);
-  document.getElementById("freeh").textContent = "Hela veckor lediga för skiftlag " + lag;
+  document.getElementById("freeh").textContent = "Hela veckor lediga för lag " + lag;
 
   // Kalenderdelen finns bara på den utlagda sidan.
   const subscribe = document.getElementById("cal-sub");
@@ -365,7 +440,7 @@ function render() {
     file.href = address.href;
     // webcal:// får kalenderappen att prenumerera i stället för att bara läsa in filen en gång.
     subscribe.href = "webcal://" + address.host + address.pathname;
-    subscribe.textContent = "Prenumerera på skiftlag " + lag;
+    subscribe.textContent = "Prenumerera på lag " + lag;
   }
 }
 

@@ -203,6 +203,12 @@ h1 {
   color: var(--muted);
   cursor: pointer;
 }
+/* Ordet "Lag" i knappen: mindre än siffran, så att fem knappar ryms på en smal telefon */
+.seg button span {
+  font-family: var(--body);
+  font-weight: 500;
+  font-size: var(--t-sm);
+}
 .seg button[aria-pressed="true"] {
   background: var(--sel);
   color: var(--sel-ink);
@@ -293,11 +299,40 @@ footer a:focus-visible {
   color: var(--offink);
 }
 
-/* Nästa pass: sidans tyngdpunkt */
-.next {
+/* Överst: dagens datum, nästa pass och nästa ledighet. Sidans tyngdpunkt. */
+.next .row {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+.next .date {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 12px;
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+.next .date span span {
+  font-weight: 400;
+  color: var(--muted);
+}
+.next .leave {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: var(--t-md);
+  color: var(--muted);
+}
+.next .leave .label {
+  display: block;
+}
+.next .leave b {
+  font-weight: 600;
+  color: var(--ink);
 }
 .next .label {
   font-size: var(--t-xs);
@@ -479,6 +514,16 @@ tr.boundary td {
 }
 .notes b {
   color: var(--ink);
+}
+
+/* Kort som går att fälla ut */
+.fold summary {
+  font-size: var(--t-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+.fold[open] summary {
+  margin-bottom: 10px;
 }
 
 /* Tidigare månader, hopfällda */

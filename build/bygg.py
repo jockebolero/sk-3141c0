@@ -90,7 +90,7 @@ RED = {
 # ---------------------------------------------------------------------------
 
 TITLE = "Skiftschema"
-DESCRIPTION = "Skiftschema för alla skiftlag."
+DESCRIPTION = "Skiftschema för alla lag."
 
 # Raden under teckenförklaringen. Tom sträng = ingen rad.
 PASS_NOTE = "Passen börjar fem minuter före hel timme för överlämning."
@@ -150,19 +150,19 @@ BODY = """\
 
 <header class="top">
   <p class="overline">Skiftschema</p>
-  <h1 id="rubrik">Välj ditt skiftlag</h1>
-  <div class="seg" role="group" aria-label="Skiftlag">
+  <h1 id="rubrik">Välj ditt lag</h1>
+  <div class="seg" role="group" aria-label="Lag">
     __BUTTONS__
   </div>
 </header>
 
 <!-- Visas tills man har valt lag -->
-<p class="hint" id="valj">Välj ditt skiftlag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
+<p class="hint" id="valj">Välj ditt lag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
 
 <!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
 <main id="schema" hidden>
 
-  <section class="card next" id="next" aria-label="Nästa pass"></section>
+  <section class="card next" id="next" aria-label="I dag, nästa pass och nästa ledighet"></section>
 
   <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
 
@@ -182,11 +182,12 @@ BODY = """\
     __PASSNOTE__
   </section>
 
-  <section class="card">
-    <h2>Så går cykeln</h2>
+  <!-- Hopfälld från början. Den läser man en gång. -->
+  <details class="card fold">
+    <summary>Så går cykeln</summary>
     <p class="fine">Alla lagen går samma __CYCLELENGTH__ veckor, förskjutna en vecka i taget.</p>
     __CYCLE__
-  </section>
+  </details>
 __CALENDAR__
 </main>
 
@@ -316,7 +317,7 @@ def buttons_html():
     """Knapparna i lagväljaren, en per lag."""
     return "\n    ".join(
         f'<button type="button" data-lag="{lag}" aria-pressed="false" '
-        f'aria-label="Skiftlag {lag}">{lag}</button>'
+        f'aria-label="Lag {lag}"><span>Lag</span> {lag}</button>'
         for lag in sorted(OFFSET)
     )
 

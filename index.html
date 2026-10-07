@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skiftschema</title>
-<meta name="description" content="Skiftschema för alla skiftlag.">
+<meta name="description" content="Skiftschema för alla lag.">
 <meta name="author" content="J. Stork">
 <meta name="robots" content="noindex">
 
@@ -32,23 +32,23 @@
 
 <header class="top">
   <p class="overline">Skiftschema</p>
-  <h1 id="rubrik">Välj ditt skiftlag</h1>
-  <div class="seg" role="group" aria-label="Skiftlag">
-    <button type="button" data-lag="1" aria-pressed="false" aria-label="Skiftlag 1">1</button>
-    <button type="button" data-lag="2" aria-pressed="false" aria-label="Skiftlag 2">2</button>
-    <button type="button" data-lag="3" aria-pressed="false" aria-label="Skiftlag 3">3</button>
-    <button type="button" data-lag="4" aria-pressed="false" aria-label="Skiftlag 4">4</button>
-    <button type="button" data-lag="5" aria-pressed="false" aria-label="Skiftlag 5">5</button>
+  <h1 id="rubrik">Välj ditt lag</h1>
+  <div class="seg" role="group" aria-label="Lag">
+    <button type="button" data-lag="1" aria-pressed="false" aria-label="Lag 1"><span>Lag</span> 1</button>
+    <button type="button" data-lag="2" aria-pressed="false" aria-label="Lag 2"><span>Lag</span> 2</button>
+    <button type="button" data-lag="3" aria-pressed="false" aria-label="Lag 3"><span>Lag</span> 3</button>
+    <button type="button" data-lag="4" aria-pressed="false" aria-label="Lag 4"><span>Lag</span> 4</button>
+    <button type="button" data-lag="5" aria-pressed="false" aria-label="Lag 5"><span>Lag</span> 5</button>
   </div>
 </header>
 
 <!-- Visas tills man har valt lag -->
-<p class="hint" id="valj">Välj ditt skiftlag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
+<p class="hint" id="valj">Välj ditt lag här ovanför, så visas schemat. Valet sparas i telefonen.</p>
 
 <!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
 <main id="schema" hidden>
 
-  <section class="card next" id="next" aria-label="Nästa pass"></section>
+  <section class="card next" id="next" aria-label="I dag, nästa pass och nästa ledighet"></section>
 
   <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
 
@@ -73,8 +73,9 @@
     <p class="fine">Passen börjar fem minuter före hel timme för överlämning.</p>
   </section>
 
-  <section class="card">
-    <h2>Så går cykeln</h2>
+  <!-- Hopfälld från början. Den läser man en gång. -->
+  <details class="card fold">
+    <summary>Så går cykeln</summary>
     <p class="fine">Alla lagen går samma 5 veckor, förskjutna en vecka i taget.</p>
     <table class="cycle">
       <thead><tr><td></td><th scope="col">Mån</th><th scope="col">Tis</th><th scope="col">Ons</th><th scope="col">Tors</th><th scope="col">Fre</th><th scope="col">Lör</th><th scope="col">Sön</th></tr></thead>
@@ -86,7 +87,7 @@
         <tr><th scope="row">Vecka 5</th><td><span class="chip p-FM">FM</span></td><td><span class="chip p-FM">FM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-EM">EM</span></td><td><span class="chip p-off">–</span></td><td><span class="chip p-off">–</span></td></tr>
       </tbody>
     </table>
-  </section>
+  </details>
 
   <section class="card">
     <h2>Lägg in passen i din kalender</h2>
