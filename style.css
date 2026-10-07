@@ -431,6 +431,15 @@ footer {
   color: var(--ink);
   font-weight: 600;
 }
+.maker a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.maker a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
 
 /* När sidan ligger på hemskärmen: håll innehållet undan från telefonens
    statusfält och hemindikator. Klassen sätts på <html> i index.html. */
