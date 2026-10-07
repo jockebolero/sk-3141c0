@@ -141,7 +141,7 @@ Storhelger körs som vanligt.
 <br><br>
 Avläst från utdelade schemablad till och med 27 december 2026.
 Därefter uträknat på cykeln. Stäm av mot nya blad när de kommer.
-<p class="maker">Gjord av <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
+<p class="maker">© __YEAR__ <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
 </footer>
 
 </div>
@@ -154,6 +154,7 @@ TITLE = "Skiftschema alla lag"
 CREDIT = "J. Stork"
 CREDIT_URL = "https://jstork.se"
 TAGLINE = "Digitalt hantverk"
+COPYRIGHT_YEAR = "2026"   # året då appen först publicerades
 FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700"
          "&family=IBM+Plex+Sans:wght@400;500;600&display=swap")
 
@@ -257,7 +258,7 @@ def body_html(with_calendar_button):
     else:
         cal_button = ""
     return fill(BODY, buttons=buttons_html(), legend=legend_html(), calbutton=cal_button,
-                credit=CREDIT, crediturl=CREDIT_URL, tagline=TAGLINE)
+                credit=CREDIT, crediturl=CREDIT_URL, tagline=TAGLINE, year=COPYRIGHT_YEAR)
 
 
 def data_js(weeks, calendar_address):
