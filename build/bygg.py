@@ -92,6 +92,9 @@ RED = {
 TITLE = "Skiftschema"
 DESCRIPTION = "Skiftschema för alla skiftlag."
 
+# Raden under teckenförklaringen. Tom sträng = ingen rad.
+PASS_NOTE = "Passen börjar fem minuter före hel timme för överlämning."
+
 # Om sidan ska döljas för sökmotorer. Den är till för kollegorna, inte för Google.
 NOINDEX = True
 
@@ -176,7 +179,7 @@ BODY = """\
     <ul class="legend">
       __LEGEND__
     </ul>
-    <p class="fine">Passen börjar fem minuter före hel timme för överlämning.</p>
+    __PASSNOTE__
   </section>
 
   <section class="card">
@@ -188,8 +191,7 @@ __CALENDAR__
 </main>
 
 <footer>
-<p>Schemat gäller __PERIOD__. Storhelger körs som vanligt.</p>
-__SOURCE__
+__FOOTER__
 <p class="maker">© __YEAR__ <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
 </footer>
 
@@ -319,11 +321,13 @@ def buttons_html():
     )
 
 
-def source_html():
-    """Raden i sidfoten som säger hur mycket av schemat som är bekräftat."""
+def footer_html():
+    """Texten i sidfoten: vilken period schemat gäller och hur mycket som är bekräftat."""
+    period = f"<p>Schemat gäller {long_date(START)} – {long_date(END)}. Storhelger körs som vanligt.</p>"
     if CONFIRMED is None or CONFIRMED >= END:
-        return "<p>Avläst från utdelade schemablad.</p>"
+        return period + "\n<p>Avläst från utdelade schemablad.</p>"
     return (
+        period + "\n"
         f"<p>Avläst från utdelade schemablad till och med {long_date(CONFIRMED)}. "
         "Därefter uträknat på cykeln och märkt som preliminärt. "
         "Stäm av mot nya blad när de kommer.</p>"
@@ -339,8 +343,8 @@ def body_html(with_calendar):
         cycle=cycle_html(),
         cyclelength=str(len(ORDER)),
         calendar=CALENDAR if with_calendar else "",
-        period=f"{long_date(START)} – {long_date(END)}",
-        source=source_html(),
+        passnote=f'<p class="fine">{PASS_NOTE}</p>' if PASS_NOTE else "",
+        footer=footer_html(),
         credit=CREDIT,
         crediturl=CREDIT_URL,
         tagline=TAGLINE,

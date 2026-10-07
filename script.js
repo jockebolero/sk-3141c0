@@ -12,7 +12,7 @@
  *   TYPES      veckotyperna i cykeln, pass måndag till söndag ("" = ledig)
  *   ORDER      ordningen på veckotyperna
  *   OFFSET     var i cykeln varje lag står första veckan (0 = A, 1 = B, ...)
- *   PASS       passkod -> [namn, tider, hel timme då passet börjar, längd i timmar]
+ *   PASS       passkod -> [namn, tider som "05:55–14:00", ...]. Tiderna styr "Nästa pass".
  *   RED        datum -> helgdagens namn
  *   CONFIRMED  sista bekräftade dagen, veckor efter den är preliminära ("" = allt bekräftat)
  *   CAL        adress till kalenderfilen, där {n} byts mot lagnumret ("" = ingen kalender)
@@ -106,22 +106,24 @@ function describe(pass) {
 // Alla pass för ett lag, med start- och sluttid
 // ---------------------------------------------------------------------------
 
-// Varje pass som { code, day, start, end }. Passet börjar fem minuter före
-// hel timme och kan sluta dagen efter (nattpassen).
+// Klockslagen i en tidsangivelse: "21:55–06:00" blir [[21, 55], [6, 0]].
+function parseTimes(text) {
+  return text.split("–").map(part => part.split(":").map(Number));
+}
+
+// Varje pass som { code, day, start, end }. Tiderna läses ur passets
+// tidsangivelse. Ett pass som slutar före det börjar slutar dagen efter (nattpassen).
 function allShifts(lag) {
   const list = [];
   WEEKS.forEach((week, weekIndex) => {
     shifts(lag, weekIndex).forEach((code, i) => {
       if (!code) return;
-      const hour = PASS[code][2];
-      const length = PASS[code][3];
+      const [from, to] = parseTimes(PASS[code][1]);
       const day = dayOf(week[0], i);
-      list.push({
-        code: code,
-        day: day,
-        start: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, -5),
-        end: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour + length, 0)
-      });
+      const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), from[0], from[1]);
+      const nextDay = to[0] * 60 + to[1] <= from[0] * 60 + from[1] ? 1 : 0;
+      const end = new Date(day.getFullYear(), day.getMonth(), day.getDate() + nextDay, to[0], to[1]);
+      list.push({ code: code, day: day, start: start, end: end });
     });
   });
   return list;

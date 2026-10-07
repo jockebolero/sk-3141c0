@@ -21,6 +21,7 @@ favicon.png, apple-touch-icon.png, icon-*.png   Ikoner
 build/
   bygg.py                       Bygger index.html, data.js och kalenderfilerna
   ikoner.py                     Ritar ikonerna (behövs bara om ikonen ändras)
+  demo.py                       Bygger en demo med påhittat schema, till jstork.se
 ```
 
 `style.css`, `script.js`, `sw.js` och `manifest.webmanifest` skrivs för hand.
@@ -79,6 +80,17 @@ filer ska rensas bort.
 Sidan erbjuder en prenumeration (uppdateras av sig själv) och en fil att ladda ner.
 Varje pass har ett fast id i kalenderfilen. Ändra inte hur id:t byggs upp i `bygg.py`,
 då blir det dubbletter hos dem som redan har lagt in passen.
+
+## Demo
+
+`build/demo.py` bygger en kopia av appen med ett påhittat schema, för att visa upp den
+utan att visa arbetsplatsens schema:
+
+    python3 build/demo.py
+
+Demon hamnar i `build/ut/demo/` och använder samma `style.css` och `script.js` som den
+riktiga appen. Perioden räknas ut från dagens datum, så demon blir aldrig gammal.
+På jstork.se ligger den i `demo/skiftschema/`. Bygg om och kopiera dit när appen har ändrats.
 
 ## Sökmotorer
 
