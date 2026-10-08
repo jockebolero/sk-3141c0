@@ -146,6 +146,13 @@ body {
 [hidden] {
   display: none !important;
 }
+/* Mjuk rullning till genvägarnas mål. Bara när telefonen inte är inställd
+   på att minska rörelse, så den är avstängd om inget annat sägs. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
 .wrap {
   max-width: 660px;
   margin: 0 auto;
@@ -217,9 +224,32 @@ h1 {
 .button:focus-visible,
 .textlink:focus-visible,
 summary:focus-visible,
+.jump a:focus-visible,
 footer a:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+
+/* Genvägar under lagväljaren: diskreta textlänkar, men med 44 px hög
+   tryckyta. Negativ marginal överst så att raden inte skjuter ner kortet
+   "I dag" mer än nödvändigt. */
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  margin-top: -12px;
+}
+.jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+/* Målen för genvägarna hamnar en bit under skärmens överkant */
+#passen,
+#kalender {
+  scroll-margin-top: 12px;
 }
 
 /* Texten som visas innan man har valt lag */
@@ -520,13 +550,17 @@ tr.boundary td {
 }
 
 /* Kort som går att fälla ut */
+/* Rubriken är knappt 22 px hög. Tryckytan växer 12 px uppåt och nedåt till
+   minst 44 px, och den negativa marginalen tar ut det, så att texten står där den stod. */
 .fold summary {
+  padding-block: 12px;
+  margin-block: -12px;
   font-size: var(--t-md);
   font-weight: 600;
   cursor: pointer;
 }
 .fold[open] summary {
-  margin-bottom: 10px;
+  margin-bottom: -2px;   /* 10 px luft under rubriken, minus de 12 px ovan */
 }
 
 /* Tidigare månader, hopfällda */
@@ -534,7 +568,8 @@ tr.boundary td {
   margin-top: 16px;
 }
 .earlier summary {
-  padding: 10px 0;
+  min-height: 44px;   /* tryckyta för fingret */
+  padding: 12px 0 10px;
   font-size: var(--t-sm);
   font-weight: 500;
   color: var(--muted);
@@ -642,7 +677,8 @@ table.cycle .chip {
 
 /* Hjälpen när knapparna inte fungerar: adressen och en kopieringsknapp */
 .calhelp summary {
-  padding: 10px 0;
+  min-height: 44px;   /* tryckyta för fingret */
+  padding: 12px 0 10px;
   text-align: center;
   font-size: var(--t-sm);
   cursor: pointer;
@@ -685,7 +721,8 @@ table.cycle .chip {
 
 .textlink {
   display: block;
-  padding: 10px 0;
+  min-height: 44px;   /* tryckyta för fingret */
+  padding: 12px 0 10px;
   text-align: center;
   font-size: var(--t-sm);
   color: var(--ink);
@@ -703,7 +740,15 @@ footer p + p {
   margin-top: 10px;
 }
 footer a {
+  position: relative;
   color: inherit;
+}
+/* Länken sitter mitt i en mening och är bara 17 px hög. En osynlig yta
+   runt den gör tryckytan 45 px hög utan att raden ändras. */
+footer a::after {
+  content: "";
+  position: absolute;
+  inset: -14px -6px;
 }
 .maker b {
   color: var(--ink);

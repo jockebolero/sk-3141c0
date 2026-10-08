@@ -162,6 +162,12 @@ BODY = """\
 <!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
 <main id="schema" hidden>
 
+  <!-- Genvägar för den som letar efter förklaringen eller kalendern.
+       Kalenderlänken finns bara när kalenderkortet finns, se JUMP_CALENDAR. -->
+  <nav class="jump" aria-label="Genvägar">
+    <a href="#passen">Vad betyder passen?</a>__JUMPCALENDAR__
+  </nav>
+
   <section class="card next" id="next" aria-label="I dag, nästa pass och nästa ledighet"></section>
 
   <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
@@ -174,7 +180,7 @@ BODY = """\
     <p class="fine" id="freenote" hidden>* Preliminärt, uträknat på cykeln.</p>
   </section>
 
-  <section class="card">
+  <section class="card" id="passen">
     <h2>Passen</h2>
     <ul class="legend">
       __LEGEND__
@@ -199,10 +205,14 @@ __FOOTER__
 </div>
 """
 
+# Genvägen till kalenderdelen, under lagväljaren. Bara med när kalenderdelen finns.
+JUMP_CALENDAR = """
+    <a href="#kalender">Lägg in i kalendern</a>"""
+
 # Kalenderdelen. Finns bara på den utlagda sidan, eftersom kalenderfilerna
 # inte följer med i förhandsvisningen. Länkarna fylls i av script.js.
 CALENDAR = """
-  <section class="card">
+  <section class="card" id="kalender">
     <h2>Lägg in passen i din kalender</h2>
     <p class="fine">En prenumeration uppdateras av sig själv om schemat ändras.</p>
     <!-- script.js sätter adresserna och lägger rätt knapp först för telefonen man har -->
@@ -362,6 +372,7 @@ def body_html(with_calendar):
         cycle=cycle_html(),
         cyclelength=str(len(ORDER)),
         calendar=CALENDAR if with_calendar else "",
+        jumpcalendar=JUMP_CALENDAR if with_calendar else "",
         passnote=f'<p class="fine">{PASS_NOTE}</p>' if PASS_NOTE else "",
         footer=footer_html(),
         credit=CREDIT,

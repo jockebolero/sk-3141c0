@@ -48,6 +48,13 @@
 <!-- Visas när man har valt lag. Innehållet fylls av script.js. -->
 <main id="schema" hidden>
 
+  <!-- Genvägar för den som letar efter förklaringen eller kalendern.
+       Kalenderlänken finns bara när kalenderkortet finns, se JUMP_CALENDAR. -->
+  <nav class="jump" aria-label="Genvägar">
+    <a href="#passen">Vad betyder passen?</a>
+    <a href="#kalender">Lägg in i kalendern</a>
+  </nav>
+
   <section class="card next" id="next" aria-label="I dag, nästa pass och nästa ledighet"></section>
 
   <section class="card" id="weeks" aria-label="Den här veckan och nästa"></section>
@@ -60,7 +67,7 @@
     <p class="fine" id="freenote" hidden>* Preliminärt, uträknat på cykeln.</p>
   </section>
 
-  <section class="card">
+  <section class="card" id="passen">
     <h2>Passen</h2>
     <ul class="legend">
       <li><span class="chip p-FM">FM</span><span>Förmiddag<em>05:55–14:00</em></span></li>
@@ -89,7 +96,7 @@
     </table>
   </details>
 
-  <section class="card">
+  <section class="card" id="kalender">
     <h2>Lägg in passen i din kalender</h2>
     <p class="fine">En prenumeration uppdateras av sig själv om schemat ändras.</p>
     <!-- script.js sätter adresserna och lägger rätt knapp först för telefonen man har -->
