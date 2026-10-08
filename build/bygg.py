@@ -205,7 +205,25 @@ CALENDAR = """
   <section class="card">
     <h2>Lägg in passen i din kalender</h2>
     <p class="fine">En prenumeration uppdateras av sig själv om schemat ändras.</p>
-    <a class="button" id="cal-sub" href="#">Prenumerera på kalendern</a>
+    <!-- script.js sätter adresserna och lägger rätt knapp först för telefonen man har -->
+    <div class="calbuttons" id="cal-buttons">
+      <a class="button" id="cal-apple" href="#">Apple Kalender<small>iPhone, iPad och Mac</small></a>
+      <a class="button" id="cal-google" href="#">Google Kalender<small>Android, eller på datorn</small></a>
+    </div>
+    <details class="calhelp">
+      <summary>Fungerar inte knapparna?</summary>
+      <p class="fine">Kopiera adressen och lägg in den för hand.</p>
+      <div class="copy">
+        <input type="text" id="cal-address" readonly aria-label="Kalenderns adress">
+        <button type="button" id="cal-copy">Kopiera</button>
+      </div>
+      <p class="fine" id="cal-copied" role="status"></p>
+      <p class="fine"><b>Google Kalender:</b> öppna calendar.google.com i webbläsaren, inte i appen.
+         Välj <b>+</b> vid <b>Andra kalendrar</b>, sedan <b>Från webbadress</b>, och klistra in adressen.
+         Syns passen inte i appen på telefonen? Slå på <b>Synkronisera</b> för kalendern i appens inställningar.</p>
+      <p class="fine"><b>Apple Kalender på Mac:</b> öppna appen Kalender, välj
+         <b>Arkiv → Ny kalenderprenumeration</b> och klistra in adressen.</p>
+    </details>
     <a class="textlink" id="cal-file" href="#">Ladda ner som fil i stället</a>
     <p class="fine">Har du redan lagt in filen? Ta bort de gamla passen först, annars visas de dubbelt.</p>
   </section>

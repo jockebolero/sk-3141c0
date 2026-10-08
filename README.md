@@ -79,6 +79,12 @@ filer ska rensas bort.
 ## Kalendern
 
 Sidan erbjuder en prenumeration (uppdateras av sig själv) och en fil att ladda ner.
+
+Prenumerationen har två knappar. Apple Kalender (iPhone, Mac) får en `webcal://`-länk.
+Google Kalender (Android) förstår inte sådana länkar, så den knappen går till
+`calendar.google.com/calendar/r?cid=` med kalenderns adress. På Android hamnar
+Google-knappen först. Under knapparna finns adressen med en kopieringsknapp och hur man
+lägger in den för hand, om knapparna inte fungerar.
 Varje pass har ett fast id i kalenderfilen. Ändra inte hur id:t byggs upp i `bygg.py`,
 då blir det dubbletter hos dem som redan har lagt in passen.
 

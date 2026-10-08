@@ -622,6 +622,67 @@ table.cycle .chip {
   font-weight: 600;
   text-decoration: none;
 }
+/* Två kalenderknappar. Den första är huvudknappen, den andra har bara ram. */
+.calbuttons {
+  margin: 12px 0 4px;
+}
+.calbuttons .button {
+  margin: 0 0 8px;
+}
+.calbuttons .button + .button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+.button small {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 400;
+}
+
+/* Hjälpen när knapparna inte fungerar: adressen och en kopieringsknapp */
+.calhelp summary {
+  padding: 10px 0;
+  text-align: center;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.calhelp > p + p {
+  margin-top: 8px;
+}
+.copy {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.copy input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--t-sm);
+}
+.copy button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--sel);
+  color: var(--sel-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.copy input:focus-visible,
+.copy button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .textlink {
   display: block;
   padding: 10px 0;

@@ -439,15 +439,43 @@ function render() {
   document.getElementById("freeh").textContent = "Hela veckor lediga för lag " + lag;
 
   // Kalenderdelen finns bara på den utlagda sidan.
-  const subscribe = document.getElementById("cal-sub");
+  const apple = document.getElementById("cal-apple");
+  const google = document.getElementById("cal-google");
   const file = document.getElementById("cal-file");
-  if (subscribe && file && CAL) {
+  if (apple && google && file && CAL) {
     const address = new URL(CAL.replace("{n}", lag), location.href);
-    file.href = address.href;
     // webcal:// får kalenderappen att prenumerera i stället för att bara läsa in filen en gång.
-    subscribe.href = "webcal://" + address.host + address.pathname;
-    subscribe.textContent = "Prenumerera på lag " + lag;
+    const webcal = "webcal://" + address.host + address.pathname;
+    file.href = address.href;
+    apple.href = webcal;
+    // Google Kalender förstår inte webcal-länkar direkt. Med cid= öppnar Google
+    // Kalender sin egen ruta för att lägga till kalendern.
+    google.href = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
+    document.getElementById("cal-address").value = address.href;
+    document.getElementById("cal-copied").textContent = "";
   }
+}
+
+// Lägger Google-knappen först på Android, där Apple-knappen inte fungerar.
+// Båda knapparna visas alltid, eftersom gissningen kan slå fel.
+function orderCalendarButtons() {
+  const google = document.getElementById("cal-google");
+  if (!google || !/Android/i.test(navigator.userAgent)) return;
+  google.parentNode.prepend(google);
+}
+
+// Kopierar kalenderns adress. Går det inte markeras texten, så att man kan kopiera själv.
+function copyCalendarAddress() {
+  const field = document.getElementById("cal-address");
+  const status = document.getElementById("cal-copied");
+  const fallback = () => {
+    field.select();
+    status.textContent = "Adressen är markerad. Kopiera den med telefonens meny.";
+  };
+  if (!navigator.clipboard) return fallback();
+  navigator.clipboard.writeText(field.value)
+    .then(() => { status.textContent = "Adressen är kopierad."; })
+    .catch(fallback);
 }
 
 // Ritar om sidan om datumet eller passet har ändrats sedan sist. En app på
@@ -489,6 +517,10 @@ function startLag() {
 document.querySelectorAll(".seg button").forEach(button => {
   button.addEventListener("click", () => pick(Number(button.dataset.lag)));
 });
+
+const copyButton = document.getElementById("cal-copy");
+if (copyButton) copyButton.addEventListener("click", copyCalendarAddress);
+orderCalendarButtons();
 
 valtLag = startLag();
 render();
