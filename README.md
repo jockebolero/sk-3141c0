@@ -72,7 +72,8 @@ Lägg till `?nu=` och en tidpunkt i adressen för att se hur sidan ser ut då:
 ## Utan nät
 
 `sw.js` sparar sidan i telefonen vid första besöket. Sidan hämtas från nätet när det går
-och från den sparade kopian annars. Byt namn på `CACHE` överst i `sw.js` om gamla sparade
+och från den sparade kopian annars. Svarar nätet inte inom fyra sekunder (`VANTA_PA_NATET`)
+visas den sparade kopian direkt, och den nya versionen sparas till nästa gång. Byt namn på `CACHE` överst i `sw.js` om gamla sparade
 filer ska rensas bort.
 
 ## Kalendern

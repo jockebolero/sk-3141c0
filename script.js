@@ -140,13 +140,17 @@ function currentShift(lag, now) {
 
 function nextHtml(lag, now) {
   const shift = currentShift(lag, now);
+  const working = Boolean(shift) && shift.start <= now;
   // Översta raden: dagens datum och vad som gäller i dag enligt schemat.
-  // Efter ett nattpass som började i går är man ledig först när passet är slut.
+  // Jobbar man nu står passet redan i kortet. Då visas bara ett senare pass
+  // samma dag, till exempel kvällens helgpass när man är på väg hem från nattens.
   const todays = allShifts(lag).find(other => iso(other.day) === iso(now));
-  const overnight = shift && shift.start <= now && !todays;
-  const status = todays ? PASS[todays.code][0] : overnight ? "Ledig efter " + clock(shift.end) : "Ledig";
+  let status = todays ? PASS[todays.code][0] : "Ledig";
+  if (working) {
+    status = todays && todays.start > now ? PASS[todays.code][0] + " " + clock(todays.start) : "";
+  }
   const date = '<p class="date"><span>I dag <span>' + longDate(now) + '</span></span>' +
-               '<b>' + status + '</b></p>';
+               (status ? '<b>' + status + '</b>' : '') + '</p>';
   if (!shift) {
     return date + '<p class="label">Schemat är slut</p>' +
            '<p class="fine">Det finns inga fler pass i den här perioden.</p>';
@@ -157,7 +161,7 @@ function nextHtml(lag, now) {
   const times = PASS[shift.code][1];
   const chip = '<span class="chip big p-' + shift.code + '" aria-hidden="true">' + shift.code + '</span>';
 
-  if (shift.start <= now) {
+  if (working) {
     return date + '<div class="row">' + chip + '<div><p class="label">Du jobbar nu</p>' +
            '<p class="main">' + name + '</p>' +
            '<p class="detail">Slutar ' + clock(shift.end) + '</p></div></div>' + leave;
@@ -226,8 +230,9 @@ function leaveHtml(lag, now, shift) {
 
   const note = isPreliminary(leave.weekIndex) ? ' · preliminärt' : '';
 
+  // Pass som inte har börjat än. Passet man jobbar på räknas inte.
   const left = allShifts(lag).filter(other =>
-    other.end > now && iso(other.day) < iso(leave.start)).length;
+    other.start > now && iso(other.day) < iso(leave.start)).length;
 
   // Redan ledig, eller inga pass kvar före ledigheten (kvällen innan den börjar).
   if (iso(leave.start) <= today || left === 0) {
@@ -236,8 +241,9 @@ function leaveHtml(lag, now, shift) {
            '<b>till och med ' + longDate(leave.end) + '</b>' + note + '</p>';
   }
 
+  const remaining = left + ' pass kvar' + (working ? ' efter det här' : '');
   return '<p class="leave"><span class="label">Nästa ledighet</span> ' +
-         '<b>' + period(leave.start, leave.end) + '</b> · ' + left + ' pass kvar' + note + '</p>';
+         '<b>' + period(leave.start, leave.end) + '</b> · ' + remaining + note + '</p>';
 }
 
 // ---------------------------------------------------------------------------

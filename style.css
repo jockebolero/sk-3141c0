@@ -465,9 +465,12 @@ td .code {
 }
 
 /* Tillstånd: passerad dag, i dag, röd dag */
+/* Passerad dag: ingen ruta, bara grå text, så att den skiljer sig från kommande
+   lediga dagar. Passkoden står kvar och går att läsa. Ingen genomskinlighet,
+   eftersom den sänker kontrasten under 4,5:1. */
 td.past {
-  filter: grayscale(1);
-  opacity: .35;
+  background: transparent;
+  color: var(--muted);
 }
 td.today {
   border-color: var(--ink);
