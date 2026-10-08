@@ -99,11 +99,11 @@ PASS_NOTE = "Passen börjar fem minuter före hel timme för överlämning."
 NOINDEX = True
 
 # Vem som har gjort appen. Visas i sidfoten och i sidans metadata.
+# Sidfoten följer varumarke/README.md: "Gjord av J. Stork · Digitalt hantverk".
 # Namnet i sidfoten länkar till webbplatsen.
 CREDIT = "J. Stork"
 CREDIT_URL = "https://jstork.se"
 TAGLINE = "Digitalt hantverk"
-COPYRIGHT_YEAR = "2026"   # året då appen först publicerades
 
 # Förhandsvisningen kan inte läsa typsnittsfilerna i mappen typsnitt/,
 # så den hämtar samma typsnitt från Google i stället.
@@ -193,7 +193,7 @@ __CALENDAR__
 
 <footer>
 __FOOTER__
-<p class="maker">© __YEAR__ <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
+<p class="maker">Gjord av <a href="__CREDITURL__"><b>__CREDIT__</b></a> · __TAGLINE__</p>
 </footer>
 
 </div>
@@ -367,7 +367,6 @@ def body_html(with_calendar):
         credit=CREDIT,
         crediturl=CREDIT_URL,
         tagline=TAGLINE,
-        year=COPYRIGHT_YEAR,
     )
 
 
