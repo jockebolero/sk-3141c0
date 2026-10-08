@@ -485,6 +485,30 @@ function refresh() {
 }
 
 // ---------------------------------------------------------------------------
+// Genvägar under lagväljaren
+// ---------------------------------------------------------------------------
+
+// Rullar till genvägens mål utan att adressen ändras. Annars hamnar #passen
+// eller #kalender i adressen: sidan öppnas längst ner efter en omladdning,
+// och #lag3 försvinner. Utan skript fungerar länkarna som vanliga ankarlänkar.
+function jump(event) {
+  // Ctrl- eller cmd-klick och mittenklick ska fortfarande öppna en ny flik.
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const target = document.getElementById(event.currentTarget.hash.slice(1));
+  if (!target) return;
+  event.preventDefault();
+  // Fokus flyttas till kortet, så att skärmläsare och tangentbord fortsätter
+  // därifrån. tabindex -1 gör kortet fokuserbart utan att det hamnar i tabbordningen.
+  target.setAttribute("tabindex", "-1");
+  target.focus({ preventScroll: true });
+  // Mjuk rullning eller inte bestäms av scroll-behavior i style.css, som är
+  // avstängd när telefonen är inställd på att minska rörelse.
+  target.scrollIntoView({ block: "start" });
+}
+
+document.querySelectorAll(".jump a").forEach(link => link.addEventListener("click", jump));
+
+// ---------------------------------------------------------------------------
 // Välja lag
 // ---------------------------------------------------------------------------
 
