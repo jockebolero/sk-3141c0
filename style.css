@@ -225,9 +225,15 @@ h1 {
 .textlink:focus-visible,
 summary:focus-visible,
 .jump a:focus-visible,
-footer a:focus-visible {
+footer a:focus-visible,
+[tabindex="-1"]:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+/* Kort som genvägarna flyttar fokus till (tabindex -1): ingen ring när man
+   trycker med fingret eller musen, bara när man använder tangentbordet. */
+[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Genvägar under lagväljaren: diskreta textlänkar, men med 44 px hög

@@ -508,6 +508,13 @@ function jump(event) {
 
 document.querySelectorAll(".jump a").forEach(link => link.addEventListener("click", jump));
 
+// Före rättelsen ovan hamnade #passen och #kalender i adressen. Den som har kvar
+// en sådan adress ska inte hamna vid kortet varje gång, så den delen tas bort.
+// Lagvalet ligger kvar i telefonen och påverkas inte.
+if (/^#(passen|kalender)$/.test(location.hash)) {
+  history.replaceState(null, "", location.pathname + location.search);
+}
+
 // ---------------------------------------------------------------------------
 // Välja lag
 // ---------------------------------------------------------------------------
