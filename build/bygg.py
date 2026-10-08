@@ -228,7 +228,7 @@ __ROBOTS__
 <link rel="icon" href="favicon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Skift">
+<meta name="apple-mobile-web-app-title" content="Skiftschema">
 <meta name="theme-color" content="#e9edf1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11161f" media="(prefers-color-scheme: dark)">
 
