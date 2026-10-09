@@ -149,8 +149,10 @@ function nextHtml(lag, now) {
   if (working) {
     status = todays && todays.start > now ? PASS[todays.code][0] + " " + clock(todays.start) : "";
   }
-  const date = '<p class="date"><span>I dag <span>' + longDate(now) + '</span></span>' +
-               (status ? '<b>' + status + '</b>' : '') + '</p>';
+  // Raden är kortets rubrik, så att den som hoppar mellan rubriker med
+  // skärmläsare hittar kortet. Utseendet styrs av .next .date i style.css.
+  const date = '<h2 class="date"><span>I dag <span>' + longDate(now) + '</span></span>' +
+               (status ? '<b>' + status + '</b>' : '') + '</h2>';
   if (!shift) {
     return date + '<p class="label">Schemat är slut</p>' +
            '<p class="fine">Det finns inga fler pass i den här perioden.</p>';

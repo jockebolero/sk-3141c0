@@ -90,10 +90,14 @@ RED = {
 # ---------------------------------------------------------------------------
 
 TITLE = "Skiftschema"
-DESCRIPTION = "Skiftschema för alla lag."
+DESCRIPTION = "Skiftschema för alla skiftlag."
 
 # Raden under teckenförklaringen. Tom sträng = ingen rad.
 PASS_NOTE = "Passen börjar fem minuter före hel timme för överlämning."
+
+# Appens publicerade adress. Behövs för bilden när länken delas, eftersom
+# den adressen måste vara fullständig. Ändra här om appen flyttar.
+PUBLIC_URL = "https://jockebolero.github.io/sk-3141c0/"
 
 # Om sidan ska döljas för sökmotorer. Den är till för kollegorna, inte för Google.
 NOINDEX = True
@@ -250,6 +254,17 @@ DOCUMENT = """\
 <meta name="description" content="__DESCRIPTION__">
 <meta name="author" content="__CREDIT__">
 __ROBOTS__
+<!-- Det som visas när länken delas i sms, Messenger och liknande -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESCRIPTION__">
+<meta property="og:url" content="__PUBLICURL__">
+<meta property="og:image" content="__PUBLICURL__icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Appens ikon: nio färgade rutor som ett utsnitt av en månad i schemat.">
+<meta name="twitter:card" content="summary">
 <!-- Ikon och utseende när sidan ligger på hemskärmen -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -509,6 +524,7 @@ def main():
 
     # Sidan och schemadatan. {n} i adressen byts mot lagnumret av script.js.
     write(ROT, "index.html", fill(DOCUMENT, title=TITLE, description=DESCRIPTION, credit=CREDIT,
+                                  publicurl=PUBLIC_URL,
                                   robots=robots, body=body_html(True)))
     write(ROT, "data.js", data_js(weeks, "skiftlag{n}.ics"))
 

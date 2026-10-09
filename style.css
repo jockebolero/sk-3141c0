@@ -352,6 +352,11 @@ footer a:focus-visible,
   font-size: var(--t-md);
   font-weight: 600;
 }
+/* Raden är en h2. Regeln .card h2 span gör annars "I dag" tunn och grå. */
+.next .date > span {
+  font-weight: inherit;
+  color: inherit;
+}
 .next .date span span {
   font-weight: 400;
   color: var(--muted);
