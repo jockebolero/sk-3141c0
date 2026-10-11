@@ -161,12 +161,14 @@ function nextHtml(lag, now) {
   const leave = leaveHtml(lag, now, shift);
   const name = PASS[shift.code][0];
   const times = PASS[shift.code][1];
+  const preliminary = CONFIRMED !== "" && iso(shift.day) > CONFIRMED
+    ? " · preliminärt" : "";
   const chip = '<span class="chip big p-' + shift.code + '" aria-hidden="true">' + shift.code + '</span>';
 
   if (working) {
     return date + '<div class="row">' + chip + '<div><p class="label">Du jobbar nu</p>' +
            '<p class="main">' + name + '</p>' +
-           '<p class="detail">Slutar ' + clock(shift.end) + '</p></div></div>' + leave;
+           '<p class="detail">Slutar ' + clock(shift.end) + preliminary + '</p></div></div>' + leave;
   }
 
   const days = daysBetween(now, shift.start);
@@ -178,7 +180,7 @@ function nextHtml(lag, now) {
 
   return date + '<div class="row">' + chip + '<div><p class="label">Nästa pass</p>' +
          '<p class="main">' + main + '</p>' +
-         '<p class="detail">' + detail + '</p></div></div>' + leave;
+         '<p class="detail">' + detail + preliminary + '</p></div></div>' + leave;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,7 +268,8 @@ function strip(lag, weekIndex, heading, today) {
              '<span class="dt">' + day.getDate() + '</span>' +
              '<span class="chip p-' + (pass || "off") + '">' + (pass || "–") + '</span></li>';
   }
-  return '<h2>' + heading + ' <span>v. ' + WEEKS[weekIndex][1] + '</span></h2>' +
+  return '<h2>' + heading + ' <span>v. ' + WEEKS[weekIndex][1] + '</span>' +
+         (isPreliminary(weekIndex) ? ' <em class="tag">Preliminärt</em>' : '') + '</h2>' +
          '<ul class="strip">' + cells + '</ul>';
 }
 

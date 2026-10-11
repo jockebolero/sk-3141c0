@@ -480,6 +480,9 @@ def build_calendar(lag, weeks):
             full_hour = dt.datetime.combine(monday + dt.timedelta(days=i), dt.time(hour, 0))
             start = full_hour - dt.timedelta(minutes=5)   # överlämning
             end = full_hour + dt.timedelta(hours=length)
+            # Märk uträknade pass även i kalendern, utan att ändra deras UID.
+            preliminary = bool(CONFIRMED and start.date() > CONFIRMED)
+            note = " · Preliminärt" if preliminary else ""
             lines += [
                 "BEGIN:VEVENT",
                 # UID måste vara unikt och får inte ändras, annars blir det dubbletter vid ny import.
@@ -487,8 +490,8 @@ def build_calendar(lag, weeks):
                 "DTSTAMP:20261002T100000Z",
                 f"DTSTART;TZID=Europe/Stockholm:{stamp(start)}",
                 f"DTEND;TZID=Europe/Stockholm:{stamp(end)}",
-                f"SUMMARY:Skift: {name}",
-                f"DESCRIPTION:Skiftlag {lag} · {code} · {start:%H:%M}–{end:%H:%M}",
+                f"SUMMARY:Skift: {name}{note}",
+                f"DESCRIPTION:Skiftlag {lag} · {code} · {start:%H:%M}–{end:%H:%M}{note}",
                 "TRANSP:OPAQUE",
                 "END:VEVENT",
             ]

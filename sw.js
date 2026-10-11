@@ -45,7 +45,7 @@ self.addEventListener("activate", event => {
   // Rensa sparade filer från äldre versioner.
   event.waitUntil(
     caches.keys()
-      .then(names => Promise.all(names.filter(name => name !== CACHE).map(name => caches.delete(name))))
+      .then(names => Promise.all(names.filter(name => name.startsWith("skiftschema-") && name !== CACHE).map(name => caches.delete(name))))
       .then(() => self.clients.claim())
   );
 });
@@ -54,7 +54,11 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== location.origin) return;
 
-  const network = fetch(request);
+  // Ett felsvar (till exempel 503) ska också använda den sparade kopian.
+  const network = fetch(request).then(response => {
+    if (!response.ok) throw new Error("Servern kunde inte hämta filen");
+    return response;
+  });
 
   // Spara en kopia av det som hämtades, till nästa gång nätet saknas.
   // waitUntil håller igång sw.js tills kopian är sparad, även om den
@@ -85,6 +89,8 @@ function wait(ms) {
 // Den sparade kopian av en fil, eller undefined. Adressens ?-del och #-del spelar
 // ingen roll. För själva sidan används index.html om adressen inte finns sparad.
 function saved(request) {
-  return caches.match(request, { ignoreSearch: true })
-    .then(copy => copy || (request.mode === "navigate" ? caches.match("index.html") : undefined));
+  return caches.open(CACHE).then(cache =>
+    cache.match(request, { ignoreSearch: true })
+      .then(copy => copy || (request.mode === "navigate" ? cache.match("index.html") : undefined))
+  );
 }

@@ -73,7 +73,8 @@ Lägg till `?nu=` och en tidpunkt i adressen för att se hur sidan ser ut då:
 
 `sw.js` sparar sidan i telefonen vid första besöket. Sidan hämtas från nätet när det går
 och från den sparade kopian annars. Svarar nätet inte inom fyra sekunder (`VANTA_PA_NATET`)
-visas den sparade kopian direkt, och den nya versionen sparas till nästa gång. Byt namn på `CACHE` överst i `sw.js` om gamla sparade
+visas den sparade kopian direkt, och den nya versionen sparas till nästa gång.
+Även serverfel använder den sparade kopian. Appen rensar bara sina egna äldre cachelagringar. Byt namn på `CACHE` överst i `sw.js` om gamla sparade
 filer ska rensas bort.
 
 ## Kalendern
@@ -85,6 +86,8 @@ Google Kalender (Android) förstår inte sådana länkar, så den knappen går t
 `calendar.google.com/calendar/r?cid=` med kalenderns adress. På Android hamnar
 Google-knappen först. Under knapparna finns adressen med en kopieringsknapp och hur man
 lägger in den för hand, om knapparna inte fungerar.
+Uträknade pass märks som preliminära i nästa-pass-kortet, veckoremsorna och kalenderfilerna.
+
 Varje pass har ett fast id i kalenderfilen. Ändra inte hur id:t byggs upp i `bygg.py`,
 då blir det dubbletter hos dem som redan har lagt in passen.
 
