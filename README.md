@@ -115,3 +115,28 @@ femveckorscykeln. Stäm av mot nya blad när de kommer.
 
 Fram till oktober 2026 visade sidan bara skiftlag 2, med start i september.
 Den versionen finns kvar i repots historik.
+
+## Besöksstatistik
+
+Den riktiga appen använder Cloudflare Web Analytics med manuell installation.
+Skriptet finns i dokumentmallen i `build/bygg.py`, så det följer med vid ombygge.
+Förhandsvisningen och demon har ingen analyskod. Cloudflare-skriptet hämtas från
+`static.cloudflareinsights.com` och skickar besöksmätningar till Cloudflare.
+Det är fristående från schemat och ingår inte i offline-cachen.
+
+I Cloudflare ska webbplatsens värdnamn vara `jockebolero.github.io`.
+Token i HTML är en offentlig webbplatsidentifierare, inte en kontonyckel.
+Statistik börjar samlas efter publicering; tidigare besök kan inte återskapas.
+Verifiera efter publicering att skriptet laddas, att en mätning skickas när
+fliken lämnas och att besöket visas i Cloudflare. Blockerare och offlinebruk
+kan innebära att besök inte registreras.
+
+Separat statistik för lag är inte implementerad: Cloudflare stöder inte egna
+händelser och den aktuella beacon-koden tar bort fragment och frågeparametrar
+från rapporterade adresser. Appens sparade lagval kan dessutom gå före `#lag1`
+eller `#lag2`. Separat lagmätning kräver ett nytt beslut om en annan lösning.
+
+Källor, kontrollerade 2026-10-13:
+- https://developers.cloudflare.com/web-analytics/faq/
+- https://developers.cloudflare.com/web-analytics/get-started/web-analytics-spa/
+- https://static.cloudflareinsights.com/beacon.min.js

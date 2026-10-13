@@ -285,7 +285,11 @@ __ROBOTS__
 <script src="script.js" defer></script>
 </head>
 <body>
-__BODY__</body>
+__BODY__
+<!-- Cloudflare Web Analytics: besöksstatistik för den riktiga appen. -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon='{"token":"9d2530847ccd428f9867dff5ec5ebcea"}'></script>
+</body>
 </html>
 """
 
